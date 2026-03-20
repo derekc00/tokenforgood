@@ -51,7 +51,6 @@ export function BadgePreview({ username, tasksCompleted }: BadgePreviewProps) {
       </p>
 
       {/* SVG is generated server-side from sanitised, trusted data only */}
-      {/* eslint-disable-next-line react/no-danger */}
       <div
         className="mb-5"
         dangerouslySetInnerHTML={{ __html: svg }}

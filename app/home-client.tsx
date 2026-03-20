@@ -53,13 +53,11 @@ function QuickDonateChip({
   lastBudget,
   lastProvider,
   tasks,
-  providerPricing,
   onGenerated,
 }: {
   lastBudget: number
   lastProvider: string
   tasks: Task[]
-  providerPricing: ProviderPricing[]
   onGenerated: () => void
 }) {
   const [copied, setCopied] = React.useState(false)
@@ -368,7 +366,6 @@ export function HomeClient({
               lastBudget={lastBudget}
               lastProvider={lastProvider}
               tasks={tasks}
-              providerPricing={providerPricing}
               onGenerated={() => {}}
             />
           </div>

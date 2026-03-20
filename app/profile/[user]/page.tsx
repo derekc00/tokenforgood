@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import Link from 'next/link'
 import { format, formatDistanceToNow } from 'date-fns'
 import {
   ExternalLink,
@@ -15,7 +14,6 @@ import {
   Lock,
   Cpu,
   Bell,
-  ChevronRight,
 } from 'lucide-react'
 
 import { getDataService } from '@/lib/services'

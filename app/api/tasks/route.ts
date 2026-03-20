@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
 import { getDataService } from '@/lib/services'
 import { CreateTaskSchema, TaskFilterSchema } from '@/lib/schemas'
 

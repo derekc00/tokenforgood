@@ -205,7 +205,7 @@ export function DonateRunModal({
   ) ?? providerPricing.find((p) => p.provider === provider)
 
   // Derive auto-selection whenever budget or provider changes.
-  const { selected: autoSelected, totalCost: autoTotal } = autoSelectTasks(
+  const { selected: autoSelected } = autoSelectTasks(
     availableTasks,
     budget,
     activePricing,
