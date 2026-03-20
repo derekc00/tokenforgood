@@ -1,0 +1,71 @@
+{
+  "completed_this_week": 142,
+  "completed_this_hour": 3,
+  "completed_all_time": 1847,
+  "total_donated_usd": 3412.50,
+  "merge_rate": 0.78,
+  "top_languages": ["TypeScript", "Python", "Rust", "Go", "JavaScript"],
+  "active_tasks": 34,
+  "top_donors_this_week": [
+    {
+      "profile": {
+        "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4003",
+        "github_username": "tj-devs",
+        "github_avatar_url": "https://avatars.githubusercontent.com/u/5672310",
+        "display_name": "TJ Rivera",
+        "merge_rate": 0.95,
+        "tasks_completed": 51
+      },
+      "tasks_completed_this_week": 18,
+      "estimated_cost_donated_this_week": 162.40
+    },
+    {
+      "profile": {
+        "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4001",
+        "github_username": "sarah-chen",
+        "github_avatar_url": "https://avatars.githubusercontent.com/u/1823456",
+        "display_name": "Sarah Chen",
+        "merge_rate": 0.92,
+        "tasks_completed": 47
+      },
+      "tasks_completed_this_week": 14,
+      "estimated_cost_donated_this_week": 118.60
+    },
+    {
+      "profile": {
+        "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4002",
+        "github_username": "mkolodny",
+        "github_avatar_url": "https://avatars.githubusercontent.com/u/2934871",
+        "display_name": "Max Kolodny",
+        "merge_rate": 0.87,
+        "tasks_completed": 38
+      },
+      "tasks_completed_this_week": 11,
+      "estimated_cost_donated_this_week": 89.30
+    },
+    {
+      "profile": {
+        "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4004",
+        "github_username": "rust-fan-42",
+        "github_avatar_url": "https://avatars.githubusercontent.com/u/9081234",
+        "display_name": "Jordan Blake",
+        "merge_rate": 0.82,
+        "tasks_completed": 22
+      },
+      "tasks_completed_this_week": 7,
+      "estimated_cost_donated_this_week": 52.80
+    },
+    {
+      "profile": {
+        "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4008",
+        "github_username": "devnomad99",
+        "github_avatar_url": "https://avatars.githubusercontent.com/u/8876543",
+        "display_name": "Lee Tanaka",
+        "merge_rate": 0.75,
+        "tasks_completed": 12
+      },
+      "tasks_completed_this_week": 5,
+      "estimated_cost_donated_this_week": 31.20
+    }
+  ]
+}

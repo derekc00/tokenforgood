@@ -21,9 +21,7 @@ import rehypeSanitize from 'rehype-sanitize'
 import { getDataService } from '@/lib/services'
 import { type Task } from '@/lib/types'
 import { generateSingleTaskCommand } from '@/lib/prompt/cli-command'
-import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -530,7 +528,7 @@ export default async function TaskPage({
                 href={task.github_issue_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
+                className="inline-flex w-full items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-xs hover:bg-primary/90 transition-all"
               >
                 Run This Task
               </a>
