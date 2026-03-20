@@ -7,6 +7,7 @@ export type {
   GitHubIssueRaw,
   GitHubFileContent,
   GitHubPR,
+  GitHubPRChangedFile,
 } from './client'
 
 export {
@@ -16,6 +17,8 @@ export {
   fetchFileContent,
   fetchRootTree,
   fetchPR,
+  fetchPRDiff,
+  fetchPRChangedFiles,
 } from './client'
 
 export { sanitizeIssueBody, wrapAsUntrusted } from './issue-sanitizer'

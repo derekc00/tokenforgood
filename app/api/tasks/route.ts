@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 
 // ---------------------------------------------------------------------------
 // POST /api/tasks
-// Body: { github_issue_url, template_id, custom_instructions? }
+// Body: { github_issue_url?, github_pr_url?, template_id, custom_instructions? }
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
   try {

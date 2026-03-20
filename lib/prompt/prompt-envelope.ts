@@ -9,10 +9,13 @@ export interface PromptSection {
 }
 
 export interface PromptEnvelope {
+  mode: 'build' | 'review'
+  version: number
   systemPreamble: PromptSection
   repoContext: PromptSection
   conventionsContext: PromptSection
-  issueContext: PromptSection
+  /** Issue context for build mode, PR context for review mode */
+  sourceContext: PromptSection
   taskInstructions: PromptSection
   validationInstructions: PromptSection
   stopConditions: PromptSection
@@ -36,7 +39,7 @@ export function renderEnvelope(envelope: PromptEnvelope): string {
     envelope.systemPreamble,
     envelope.repoContext,
     envelope.conventionsContext,
-    envelope.issueContext,
+    envelope.sourceContext,
     envelope.taskInstructions,
     envelope.validationInstructions,
     envelope.stopConditions,

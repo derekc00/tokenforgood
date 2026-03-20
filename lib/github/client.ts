@@ -37,12 +37,23 @@ export interface GitHubFileContent {
 
 export interface GitHubPR {
   number: number
+  title: string
   html_url: string
   draft: boolean
   state: string
   user: { login: string }
   body: string | null
-  head: { repo: { full_name: string } }
+  head: { sha: string; repo: { full_name: string } }
+  base: { sha: string }
+  changed_files: number
+  diff_url: string
+}
+
+export interface GitHubPRChangedFile {
+  filename: string
+  status: string
+  additions: number
+  deletions: number
 }
 
 // ---------------------------------------------------------------------------
@@ -168,4 +179,56 @@ export async function fetchPR(
   }
 
   return res.json() as Promise<GitHubPR>
+}
+
+/**
+ * Fetch a PR diff as a unified diff string.
+ * For large diffs (>250KB), returns a truncated version with a warning.
+ */
+export async function fetchPRDiff(
+  owner: string,
+  repo: string,
+  prNumber: number,
+): Promise<{ diff: string; truncated: boolean }> {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3.diff',
+  }
+  if (process.env.GITHUB_TOKEN) {
+    headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
+  }
+
+  const res = await fetch(
+    `${GITHUB_API}/repos/${owner}/${repo}/pulls/${prNumber}`,
+    { headers },
+  )
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(
+      `GitHub API error ${res.status} fetching diff for PR #${prNumber}${body ? `: ${body.slice(0, 200)}` : ''}`,
+    )
+  }
+
+  const diff = await res.text()
+  const MAX_DIFF_SIZE = 250_000 // ~250KB
+  if (diff.length > MAX_DIFF_SIZE) {
+    return {
+      diff: diff.slice(0, MAX_DIFF_SIZE) + '\n\n... [DIFF TRUNCATED — too large to include in full]',
+      truncated: true,
+    }
+  }
+  return { diff, truncated: false }
+}
+
+/**
+ * Fetch the list of files changed in a PR.
+ */
+export async function fetchPRChangedFiles(
+  owner: string,
+  repo: string,
+  prNumber: number,
+): Promise<GitHubPRChangedFile[]> {
+  return githubFetchJson<GitHubPRChangedFile[]>(
+    `/repos/${owner}/${repo}/pulls/${prNumber}/files?per_page=100`,
+  )
 }
