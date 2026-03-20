@@ -208,7 +208,7 @@ export function TaskCard({
       {/* Footer */}
       <div>
         <Separator />
-        <CardFooter className="flex items-center justify-between gap-2 py-2.5">
+        <CardFooter className="flex flex-wrap items-center justify-between gap-2 py-2.5">
           {/* Left: token estimate + model */}
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="flex items-center gap-1 text-xs text-muted-foreground">

@@ -296,7 +296,7 @@ export function DonateRunModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-lg gap-0 p-0 sm:max-w-lg">
+      <DialogContent className="mx-2 w-[calc(100vw-1rem)] max-w-lg gap-0 p-0 sm:mx-auto sm:w-full sm:max-w-lg">
         {/* Header */}
         <DialogHeader className="border-b px-5 pb-4 pt-5">
           <DialogTitle className="text-base font-semibold">
@@ -304,41 +304,40 @@ export function DonateRunModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5 px-5 py-5">
+        <div className="flex flex-col gap-5 overflow-y-auto px-5 py-5" style={{ maxHeight: 'min(60vh, 480px)' }}>
           {/* Budget section */}
           <section className="flex flex-col gap-3">
             <p className="text-sm font-medium text-foreground">How much?</p>
 
-            {/* Preset toggle + slider in one row */}
-            <div className="flex items-center gap-3">
-              <ToggleGroup
-                value={activePreset ? [activePreset] : []}
-                onValueChange={handlePresetSelect}
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-              >
-                {PRESET_AMOUNTS.map((amount) => (
-                  <ToggleGroupItem
-                    key={amount}
-                    value={amount.toString()}
-                    aria-label={`$${amount}`}
-                  >
-                    ${amount}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
+            {/* Preset buttons */}
+            <ToggleGroup
+              value={activePreset ? [activePreset] : []}
+              onValueChange={handlePresetSelect}
+              variant="outline"
+              size="sm"
+              className="flex-wrap"
+            >
+              {PRESET_AMOUNTS.map((amount) => (
+                <ToggleGroupItem
+                  key={amount}
+                  value={amount.toString()}
+                  aria-label={`$${amount}`}
+                >
+                  ${amount}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
 
-              <Slider
-                value={[budget]}
-                onValueChange={handleBudgetChange}
-                min={BUDGET_MIN}
-                max={BUDGET_MAX}
-                step={1}
-                className="flex-1"
-                aria-label="Budget"
-              />
-            </div>
+            {/* Slider — full width, touch-friendly height */}
+            <Slider
+              value={[budget]}
+              onValueChange={handleBudgetChange}
+              min={BUDGET_MIN}
+              max={BUDGET_MAX}
+              step={1}
+              className="py-2"
+              aria-label="Budget"
+            />
 
             <p className="text-right font-mono text-sm font-semibold text-foreground">
               ${budget}

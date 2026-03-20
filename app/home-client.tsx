@@ -78,7 +78,11 @@ function QuickDonateChip({
 
     setCopied(true)
     toast.success('Command copied!', {
-      description: 'Paste it in your terminal to start donating.',
+      description: `${openTasks.length} task${openTasks.length !== 1 ? 's' : ''} · ~$${lastBudget} estimated`,
+      action: {
+        label: 'Undo',
+        onClick: () => { /* no-op — command is already in clipboard */ },
+      },
     })
     setTimeout(() => setCopied(false), 3000)
     onGenerated()
@@ -114,7 +118,7 @@ function TopHelpers({ donors }: { donors: TopDonor[] }) {
       <h2 className="mb-4 text-sm font-semibold text-foreground">
         This Week&apos;s Top Helpers
       </h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         {donors.map((donor, idx) => (
           <Card key={donor.profile.id} size="sm">
             <CardHeader>

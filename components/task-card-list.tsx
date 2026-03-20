@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Skeleton } from "@/components/ui/skeleton"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { TaskCard } from "@/components/task-card"
+import { EmptyState } from "@/components/empty-state"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -280,7 +281,12 @@ export function TaskCardList({ tasks, onRunThis, isLoading }: TaskCardListProps)
 
       {/* Grid or empty state */}
       {filtered.length === 0 ? (
-        <EmptyState />
+        <EmptyState
+          icon={<ListTodo className="size-6 text-muted-foreground" />}
+          title="No tasks found."
+          description="Be the first to request one!"
+          action={<Button size="sm" variant="outline">Request a Task</Button>}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((task) => (
@@ -306,21 +312,3 @@ function FilterBarSkeleton() {
   )
 }
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-        <ListTodo className="size-6 text-muted-foreground" />
-      </div>
-      <div className="space-y-1">
-        <p className="text-sm font-medium text-foreground">No tasks found.</p>
-        <p className="text-xs text-muted-foreground">
-          Be the first to request one!
-        </p>
-      </div>
-      <Button size="sm" variant="outline">
-        Request a Task
-      </Button>
-    </div>
-  )
-}
