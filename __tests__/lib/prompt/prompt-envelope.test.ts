@@ -78,17 +78,7 @@ describe('renderEnvelope — section ordering and separators', () => {
   })
 
   it('preserves the canonical section order', () => {
-    const envelope = makeEnvelope({
-      systemPreamble:         section('SYSTEM',      'trusted',   'a'),
-      repoContext:            section('REPO',        'trusted',   'b'),
-      conventionsContext:     section('CONVENTIONS', 'trusted',   'c'),
-      issueContext:           section('ISSUE',       'untrusted', 'd'),
-      taskInstructions:       section('TASK',        'trusted',   'e'),
-      validationInstructions: section('VALIDATION',  'trusted',   'f'),
-      stopConditions:         section('STOP',        'trusted',   'g'),
-      outputInstructions:     section('OUTPUT',      'trusted',   'h'),
-    })
-    const result = renderEnvelope(envelope)
+    const result = renderEnvelope(makeEnvelope())
     const order = ['SYSTEM', 'REPO', 'CONVENTIONS', 'ISSUE', 'TASK', 'VALIDATION', 'STOP', 'OUTPUT']
     let lastIndex = -1
     for (const label of order) {
@@ -100,9 +90,9 @@ describe('renderEnvelope — section ordering and separators', () => {
 
   it('separates sections with a blank line (double newline)', () => {
     const result = renderEnvelope(makeEnvelope())
-    expect(result).toContain('\n\n')
-    // 8 sections → 7 separators
-    expect(result.split('\n\n').length - 1).toBe(7)
+    // 8 sections → 7 double-newline separators between them
+    const separatorCount = (result.match(/\n\n/g) ?? []).length
+    expect(separatorCount).toBe(7)
   })
 })
 

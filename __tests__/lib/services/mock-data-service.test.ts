@@ -8,10 +8,10 @@ import {
 import { createMockDataService } from '@/lib/services/mock-data-service'
 
 // ---------------------------------------------------------------------------
-// AIProviderSchema — used inside normaliseProvider()
+// AIProviderSchema
 // ---------------------------------------------------------------------------
 
-describe('AIProviderSchema (used by normaliseProvider)', () => {
+describe('AIProviderSchema', () => {
   it('returns the correct AIProvider for a valid provider string', () => {
     expect(AIProviderSchema.parse('claude-max')).toBe('claude-max')
     expect(AIProviderSchema.parse('claude-pro')).toBe('claude-pro')
@@ -36,10 +36,10 @@ describe('AIProviderSchema (used by normaliseProvider)', () => {
 })
 
 // ---------------------------------------------------------------------------
-// TaskTypeSchema — used inside coerceTask()
+// TaskTypeSchema
 // ---------------------------------------------------------------------------
 
-describe('TaskTypeSchema (used by coerceTask)', () => {
+describe('TaskTypeSchema', () => {
   it('returns the correct TaskType for a valid task_type string', () => {
     expect(TaskTypeSchema.parse('write-tests')).toBe('write-tests')
     expect(TaskTypeSchema.parse('security-audit')).toBe('security-audit')
@@ -56,10 +56,10 @@ describe('TaskTypeSchema (used by coerceTask)', () => {
 })
 
 // ---------------------------------------------------------------------------
-// TaskStatusSchema — used inside coerceTask()
+// TaskStatusSchema
 // ---------------------------------------------------------------------------
 
-describe('TaskStatusSchema (used by coerceTask)', () => {
+describe('TaskStatusSchema', () => {
   it('returns the correct status for a valid status string', () => {
     expect(TaskStatusSchema.parse('open')).toBe('open')
     expect(TaskStatusSchema.parse('in_progress')).toBe('in_progress')
@@ -87,33 +87,16 @@ describe('createMockDataService', () => {
   it('returns tasks with valid typed task_type values', async () => {
     const service = createMockDataService()
     const { data } = await service.getTasks()
-    const validTypes = [
-      'write-tests',
-      'implement-feature',
-      'security-audit',
-      'architecture-review',
-      'add-documentation',
-      'setup-cicd',
-      'migrate-framework',
-      'add-types',
-      'dependency-audit',
-      'code-quality-review',
-      'performance-analysis',
-      'accessibility-audit',
-    ] as const
     for (const task of data) {
-      expect(validTypes).toContain(task.task_type)
+      expect(TaskTypeSchema.options).toContain(task.task_type)
     }
   })
 
   it('returns tasks with valid typed status values', async () => {
     const service = createMockDataService()
     const { data } = await service.getTasks()
-    const validStatuses = [
-      'open', 'claimed', 'in_progress', 'completed', 'failed', 'stalled', 'expired', 'stale',
-    ] as const
     for (const task of data) {
-      expect(validStatuses).toContain(task.status)
+      expect(TaskStatusSchema.options).toContain(task.status)
     }
   })
 })
