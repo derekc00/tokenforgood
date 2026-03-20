@@ -33,6 +33,13 @@ export async function GET(
         )
       }
 
+      if (!task.repo_profile) {
+        return NextResponse.json(
+          { error: 'Repo profile not yet available for this task' },
+          { status: 422 },
+        )
+      }
+
       // Parse sections query param for progressive trust
       const sectionsParam = request.nextUrl.searchParams.get('sections')
       const activeSections = new Set(sectionsParam?.split(',').filter(Boolean) ?? [])
@@ -46,7 +53,7 @@ export async function GET(
 
       try {
         // Fetch PR data, diff, and changed files concurrently
-        const [ghPR, diffResult, changedFiles] = await Promise.all([
+        const [ghPR, diffResult, changedFilesResult] = await Promise.all([
           fetchPR(task.repo_owner, task.repo_name, task.github_pr_number),
           fetchPRDiff(task.repo_owner, task.repo_name, task.github_pr_number),
           fetchPRChangedFiles(task.repo_owner, task.repo_name, task.github_pr_number),
@@ -78,11 +85,12 @@ export async function GET(
           : `Review this pull request thoroughly.`
 
         const prompt = buildPRReviewPrompt({
-          repoProfile: task.repo_profile!,
+          repoProfile: task.repo_profile,
           pr: domainPR,
           diff: diffResult.diff,
           diffTruncated: diffResult.truncated,
-          changedFiles,
+          changedFiles: changedFilesResult.files,
+          changedFilesTruncated: changedFilesResult.truncated,
           taskType: task.task_type,
           taskInstructions: templateInstructions,
           sections,
@@ -99,11 +107,16 @@ export async function GET(
         })
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error'
-        // Surface GitHub API errors clearly
         if (message.includes('403') || message.includes('429')) {
           return NextResponse.json(
             { error: 'GitHub API rate limit exceeded. Try again later.' },
             { status: 429 },
+          )
+        }
+        if (message.includes('404')) {
+          return NextResponse.json(
+            { error: 'PR diff is no longer available — the branch may have been deleted or force-pushed.' },
+            { status: 410 },
           )
         }
         throw err

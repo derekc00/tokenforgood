@@ -190,12 +190,7 @@ export async function fetchPRDiff(
   repo: string,
   prNumber: number,
 ): Promise<{ diff: string; truncated: boolean }> {
-  const headers: Record<string, string> = {
-    Accept: 'application/vnd.github.v3.diff',
-  }
-  if (process.env.GITHUB_TOKEN) {
-    headers['Authorization'] = `Bearer ${process.env.GITHUB_TOKEN}`
-  }
+  const headers = { ...getGitHubHeaders(), Accept: 'application/vnd.github.v3.diff' }
 
   const res = await fetch(
     `${GITHUB_API}/repos/${owner}/${repo}/pulls/${prNumber}`,
@@ -222,13 +217,15 @@ export async function fetchPRDiff(
 
 /**
  * Fetch the list of files changed in a PR.
+ * Returns up to 100 files and a flag indicating if the list was truncated.
  */
 export async function fetchPRChangedFiles(
   owner: string,
   repo: string,
   prNumber: number,
-): Promise<GitHubPRChangedFile[]> {
-  return githubFetchJson<GitHubPRChangedFile[]>(
+): Promise<{ files: GitHubPRChangedFile[]; truncated: boolean }> {
+  const files = await githubFetchJson<GitHubPRChangedFile[]>(
     `/repos/${owner}/${repo}/pulls/${prNumber}/files?per_page=100`,
   )
+  return { files, truncated: files.length >= 100 }
 }
