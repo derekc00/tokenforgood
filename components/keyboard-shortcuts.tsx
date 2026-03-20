@@ -11,7 +11,8 @@ export function KeyboardShortcuts() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       // Don't fire when typing in inputs, textareas, or contenteditable
-      const target = e.target as HTMLElement
+      if (!(e.target instanceof HTMLElement)) return
+      const target = e.target
       if (
         target.tagName === 'INPUT' ||
         target.tagName === 'TEXTAREA' ||

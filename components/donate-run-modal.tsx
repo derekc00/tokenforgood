@@ -253,7 +253,7 @@ export function DonateRunModal({
   }, [budget, provider, resetOverrides])
 
   function handleBudgetChange(value: number | readonly number[]) {
-    const next = Array.isArray(value) ? (value as readonly number[])[0] : (value as number)
+    const next = Array.isArray(value) ? value[0] : value
     if (next != null) setBudget(next)
   }
 
@@ -350,7 +350,9 @@ export function DonateRunModal({
             <Select
               value={provider}
               onValueChange={(v) => {
-                setProvider(v as AIProvider)
+                const isProvider = (s: string): s is AIProvider =>
+                  PROVIDER_OPTIONS.some((o) => o.value === s)
+                if (v !== null && isProvider(v)) setProvider(v)
               }}
             >
               <SelectTrigger className="w-full">
@@ -369,7 +371,9 @@ export function DonateRunModal({
             <Select
               value={model}
               onValueChange={(v) => {
-                setModel(v as AIModel | 'auto')
+                const isModel = (s: string): s is AIModel | 'auto' =>
+                  MODEL_OPTIONS.some((o) => o.value === s)
+                if (v !== null && isModel(v)) setModel(v)
               }}
             >
               <SelectTrigger className="w-full">
