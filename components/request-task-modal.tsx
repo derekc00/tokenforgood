@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { GitHubIssueUrlSchema } from "@/lib/schemas"
+import { parseGitHubIssueUrl } from "@/lib/github/repo-profile"
 import type { Template, TemplateCategory } from "@/lib/types"
 
 // ---------------------------------------------------------------------------
@@ -44,7 +45,7 @@ interface RequestTaskModalProps {
 interface ParsedIssue {
   owner: string
   repo: string
-  number: number
+  issueNumber: number
 }
 
 // ---------------------------------------------------------------------------
@@ -61,19 +62,6 @@ type FormValues = z.infer<typeof FormSchema>
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Parse a valid GitHub issue URL into its parts. Assumes URL is already valid. */
-function parseIssueUrl(url: string): ParsedIssue | null {
-  const match = url.match(
-    /^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/issues\/(\d+)$/,
-  )
-  if (!match) return null
-  return {
-    owner: match[1],
-    repo: match[2],
-    number: parseInt(match[3], 10),
-  }
-}
 
 /**
  * Suggest the most relevant template slug based on keywords in the issue URL
@@ -137,7 +125,7 @@ export function RequestTaskModal({
   >("idle")
   const [parsedIssue, setParsedIssue] = React.useState<ParsedIssue | null>(null)
   const [submitState, setSubmitState] = React.useState<
-    "idle" | "loading" | "success"
+    "idle" | "loading" | "success" | "error"
   >("idle")
 
   const fetchTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -178,7 +166,7 @@ export function RequestTaskModal({
     setParsedIssue(null)
 
     fetchTimerRef.current = setTimeout(() => {
-      const parsed = parseIssueUrl(urlValue)
+      const parsed = parseGitHubIssueUrl(urlValue)
       setParsedIssue(parsed)
       setFetchState("done")
 
@@ -217,9 +205,17 @@ export function RequestTaskModal({
       await onSubmit(data)
       setSubmitState("success")
     } catch {
-      setSubmitState("idle")
+      setSubmitState("error")
     }
   }
+
+  // Clear submit error when the user makes any form change so they can retry.
+  React.useEffect(() => {
+    if (submitState === "error") {
+      setSubmitState("idle")
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlValue, templateIdValue])
 
   const isSubmitting = submitState === "loading"
   const isSuccess = submitState === "success"
@@ -357,7 +353,12 @@ export function RequestTaskModal({
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+              {submitState === "error" && (
+                <p className="text-xs text-destructive sm:mr-auto" role="alert">
+                  Something went wrong. Please try again.
+                </p>
+              )}
               <Button
                 type="submit"
                 disabled={!canSubmit}
