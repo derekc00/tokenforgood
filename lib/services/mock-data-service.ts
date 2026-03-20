@@ -177,14 +177,6 @@ function fromJson<T>(value: unknown): T {
   return JSON.parse(JSON.stringify(value))
 }
 
-const KNOWN_PROVIDERS: readonly AIProvider[] = [
-  'claude-max',
-  'claude-pro',
-  'chatgpt-pro',
-  'github-copilot',
-  'gemini-advanced',
-]
-
 const KNOWN_MODELS: readonly AIModel[] = ['haiku', 'sonnet', 'opus', 'gpt-4o', 'o3', 'copilot']
 
 const KNOWN_TASK_TYPES: readonly TaskType[] = [
@@ -200,17 +192,6 @@ const KNOWN_TASK_TYPES: readonly TaskType[] = [
   'code-quality-review',
   'performance-analysis',
   'accessibility-audit',
-]
-
-const KNOWN_TASK_STATUSES: readonly Task['status'][] = [
-  'open',
-  'claimed',
-  'in_progress',
-  'completed',
-  'failed',
-  'stalled',
-  'expired',
-  'stale',
 ]
 
 const KNOWN_ACTIVITY_ACTIONS: readonly ActivityFeedItem['action'][] = ['completed', 'claimed']
