@@ -12,7 +12,6 @@ import {
   DollarSign,
   BarChart3,
   Layers,
-  Copy,
   Lock,
   Cpu,
   Bell,
@@ -25,7 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
-import { CopyBadgeButton } from './copy-badge-button'
+import { BadgePreview } from '@/components/badge-preview'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -320,7 +319,6 @@ export default async function ProfilePage({
   const uniqueRepos = countUniqueRepos(completions)
 
   const memberSince = format(new Date(profile.created_at), 'MMMM yyyy')
-  const badgeMarkdown = `[![TokenForGood](https://tokenforgood.dev/api/badge/@${profile.github_username})](https://tokenforgood.dev/profile/@${profile.github_username})`
 
   // Determine if this is "own profile" (no auth yet — always show for demo if
   // the username matches "sarah-chen", the first mock user)
@@ -589,47 +587,10 @@ export default async function ProfilePage({
       {/* ------------------------------------------------------------------ */}
       <Separator className="mb-8" />
 
-      <div className="rounded-xl border border-border bg-muted/30 p-6">
-        <h2 className="mb-1 text-sm font-semibold text-foreground">
-          Your TokenForGood Badge
-        </h2>
-        <p className="mb-5 text-xs text-muted-foreground">
-          Show your open-source contributions in your GitHub README.
-        </p>
-
-        {/* Badge preview */}
-        <div className="mb-5 flex flex-wrap gap-2">
-          {/* Simulated badge using inline styles — /api/badge isn't live yet */}
-          <div className="inline-flex h-5 items-center overflow-hidden rounded-full text-xs font-medium shadow">
-            <span className="bg-[#555] px-2.5 py-0.5 text-white">TokenForGood</span>
-            <span className="bg-[#4c1] px-2.5 py-0.5 text-white">
-              {profile.tasks_completed} tasks
-            </span>
-          </div>
-          <div className="inline-flex h-5 items-center overflow-hidden rounded-full text-xs font-medium shadow">
-            <span className="bg-[#555] px-2.5 py-0.5 text-white">donated</span>
-            <span className="bg-[#0075ca] px-2.5 py-0.5 text-white">
-              ~${profile.estimated_cost_donated_usd.toFixed(0)}
-            </span>
-          </div>
-        </div>
-
-        {/* Markdown snippet */}
-        <div className="flex items-start gap-2">
-          <pre className="flex-1 overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs text-foreground">
-            <code>{badgeMarkdown}</code>
-          </pre>
-          <CopyBadgeButton text={badgeMarkdown} />
-        </div>
-
-        <p className="mt-3 text-xs text-muted-foreground">
-          Badge image endpoint{' '}
-          <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
-            /api/badge/{profile.github_username}
-          </code>{' '}
-          coming soon.
-        </p>
-      </div>
+      <BadgePreview
+        username={profile.github_username}
+        tasksCompleted={profile.tasks_completed}
+      />
     </div>
   )
 }

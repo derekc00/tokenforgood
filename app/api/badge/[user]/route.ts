@@ -36,7 +36,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'image/svg+xml',
-        'Cache-Control': 's-maxage=600, stale-while-revalidate=60',
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=60',
         // Prevent browser from sniffing the content type
         'X-Content-Type-Options': 'nosniff',
       },
