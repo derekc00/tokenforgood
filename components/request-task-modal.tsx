@@ -120,6 +120,8 @@ const CATEGORY_LABELS: Record<TemplateCategory, string> = {
   "review-analysis": "Review & Analysis",
 }
 
+const CATEGORIES: readonly TemplateCategory[] = ["code-generation", "review-analysis"]
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -318,16 +320,14 @@ export function RequestTaskModal({
                     <SelectValue placeholder="Select a template" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.entries(templatesByCategory) as Array<
-                      [TemplateCategory, Template[]]
-                    >)
-                      .filter(([, items]) => items.length > 0)
-                      .map(([category, items]) => (
+                    {CATEGORIES
+                      .filter((category) => templatesByCategory[category].length > 0)
+                      .map((category) => (
                         <SelectGroup key={category}>
                           <SelectLabel>
                             {CATEGORY_LABELS[category]}
                           </SelectLabel>
-                          {items.map((tpl) => (
+                          {templatesByCategory[category].map((tpl) => (
                             <SelectItem key={tpl.id} value={tpl.id}>
                               <TemplateOption template={tpl} />
                             </SelectItem>

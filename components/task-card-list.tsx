@@ -33,6 +33,13 @@ export interface TaskCardListProps {
 type TokenBucket = "any" | "small" | "medium" | "large"
 type StatusFilter = "open" | "in_progress" | "completed"
 
+function isTokenBucket(v: string): v is TokenBucket {
+  return v === "any" || v === "small" || v === "medium" || v === "large"
+}
+function isStatusFilter(v: string): v is StatusFilter {
+  return v === "open" || v === "in_progress" || v === "completed"
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -240,11 +247,8 @@ export function TaskCardList({ tasks, onRunThis, isLoading }: TaskCardListProps)
           size="sm"
           value={toSingleValueArray(tokenFilter)}
           onValueChange={(incoming) => {
-            const next = fromSingleValueArray(
-              incoming,
-              tokenFilter
-            ) as TokenBucket | null
-            setTokenFilter(next ?? "any")
+            const raw = fromSingleValueArray(incoming, tokenFilter)
+            setTokenFilter(raw !== null && isTokenBucket(raw) ? raw : "any")
           }}
         >
           <ToggleGroupItem value="any">Any</ToggleGroupItem>
@@ -259,11 +263,8 @@ export function TaskCardList({ tasks, onRunThis, isLoading }: TaskCardListProps)
           size="sm"
           value={toSingleValueArray(statusFilter)}
           onValueChange={(incoming) => {
-            const next = fromSingleValueArray(
-              incoming,
-              statusFilter
-            ) as StatusFilter | null
-            setStatusFilter(next)
+            const raw = fromSingleValueArray(incoming, statusFilter)
+            setStatusFilter(raw !== null && isStatusFilter(raw) ? raw : null)
           }}
         >
           <ToggleGroupItem value="open">Open</ToggleGroupItem>
