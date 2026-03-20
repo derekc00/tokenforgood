@@ -157,20 +157,76 @@ interface RawStats {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Type-safe membership check for string union types. Uses `some` to avoid type assertions. */
+function includes<T extends string>(arr: readonly T[], value: string): value is T {
+  return arr.some((item) => item === value)
+}
+
+/**
+ * Re-parses an imported JSON value as a typed shape.
+ * JSON.parse returns `any`, so TypeScript accepts the assignment to T
+ * without a type assertion.
+ */
+function fromJson<T>(value: unknown): T {
+  return JSON.parse(JSON.stringify(value))
+}
+
+const KNOWN_PROVIDERS: readonly AIProvider[] = [
+  'claude-max',
+  'claude-pro',
+  'chatgpt-pro',
+  'github-copilot',
+  'gemini-advanced',
+]
+
+const KNOWN_MODELS: readonly AIModel[] = ['haiku', 'sonnet', 'opus', 'gpt-4o', 'o3', 'copilot']
+
+const KNOWN_TASK_TYPES: readonly TaskType[] = [
+  'write-tests',
+  'implement-feature',
+  'security-audit',
+  'architecture-review',
+  'add-documentation',
+  'setup-cicd',
+  'migrate-framework',
+  'add-types',
+  'dependency-audit',
+  'code-quality-review',
+  'performance-analysis',
+  'accessibility-audit',
+]
+
+const KNOWN_TASK_STATUSES: readonly Task['status'][] = [
+  'open',
+  'claimed',
+  'in_progress',
+  'completed',
+  'failed',
+  'stalled',
+  'expired',
+  'stale',
+]
+
+const KNOWN_ACTIVITY_ACTIONS: readonly ActivityFeedItem['action'][] = ['completed', 'claimed']
+
 /** Normalises provider strings from JSON (underscores) to the AIProvider union (hyphens). */
 function normaliseProvider(raw: string | null): AIProvider | null {
   if (!raw) return null
-  return raw.replace(/_/g, '-') as AIProvider
+  const normalised = raw.replace(/_/g, '-')
+  return includes(KNOWN_PROVIDERS, normalised) ? normalised : null
 }
 
 /** Coerces a raw profile from JSON to the typed Profile shape. */
 function coerceProfile(raw: RawProfile): Profile {
+  const preferredModel = raw.preferred_model
   return {
     ...raw,
     display_name: raw.display_name,
     bio: raw.bio,
     preferred_provider: normaliseProvider(raw.preferred_provider),
-    preferred_model: (raw.preferred_model as AIModel | null) ?? null,
+    preferred_model: preferredModel !== null && includes(KNOWN_MODELS, preferredModel)
+      ? preferredModel
+      : null,
   }
 }
 
@@ -188,10 +244,10 @@ function coerceTask(raw: RawTask): Task {
     repo_profile: null,
     template_id: raw.template_id,
     template: null,
-    task_type: raw.task_type as TaskType,
+    task_type: includes(KNOWN_TASK_TYPES, raw.task_type) ? raw.task_type : 'write-tests',
     requester_id: raw.requester_id,
     requester: null,
-    status: raw.status as Task['status'],
+    status: includes(KNOWN_TASK_STATUSES, raw.status) ? raw.status : 'open',
     claimed_by: raw.claimed_by,
     claimed_at: raw.claimed_at,
     last_heartbeat_at: raw.last_heartbeat_at,
@@ -300,17 +356,19 @@ function matchesTokenFilter(
 function flattenPricing(raw: RawPricing): ProviderPricing[] {
   const result: ProviderPricing[] = []
   for (const provider of raw.providers) {
-    const providerKey = normaliseProvider(provider.id) as AIProvider
+    const providerKey = normaliseProvider(provider.id)
+    if (providerKey === null) continue
     const isFlat = provider.billing_model === 'flat_rate_estimate'
 
     for (const model of provider.models) {
+      if (!includes(KNOWN_MODELS, model.id)) continue
       const flatRates: Partial<Record<TaskType, number>> | null = isFlat
         ? buildFlatRatesFromTaskTypes(model)
         : null
 
       result.push({
         provider: providerKey,
-        model: model.id as AIModel,
+        model: model.id,
         display_name: model.display_name,
         input_cost_per_mtok: model.input_cost_per_mtok ?? 0,
         output_cost_per_mtok: model.output_cost_per_mtok ?? 0,
@@ -354,11 +412,11 @@ function buildFlatRatesFromTaskTypes(
   }
 
   for (const taskTypeStr of model.recommended_for) {
-    const taskType = taskTypeStr as TaskType
-    const tier = tierMap[taskType] ?? 'medium'
+    if (!includes(KNOWN_TASK_TYPES, taskTypeStr)) continue
+    const tier = tierMap[taskTypeStr] ?? 'medium'
     const cost = rates[tier]
     if (cost !== undefined) {
-      perTask[taskType] = cost
+      perTask[taskTypeStr] = cost
     }
   }
 
@@ -404,7 +462,7 @@ export class MockDataService implements DataService {
     // Profiles
     const profiles = new Map<string, Profile>()
     const profilesByUsername = new Map<string, Profile>()
-    for (const raw of rawProfiles as RawProfile[]) {
+    for (const raw of fromJson<RawProfile[]>(rawProfiles)) {
       const profile = coerceProfile(raw)
       profiles.set(profile.id, profile)
       profilesByUsername.set(profile.github_username, profile)
@@ -413,14 +471,14 @@ export class MockDataService implements DataService {
     // Templates
     const templates = new Map<string, Template>()
     const templatesBySlug = new Map<string, Template>()
-    for (const raw of rawTemplates as Template[]) {
+    for (const raw of fromJson<Template[]>(rawTemplates)) {
       templates.set(raw.id, raw)
       templatesBySlug.set(raw.slug, raw)
     }
 
     // Tasks — enrich with relations after both maps are built
     const tasks = new Map<string, Task>()
-    for (const raw of rawTasks as RawTask[]) {
+    for (const raw of fromJson<RawTask[]>(rawTasks)) {
       const task = coerceTask(raw)
       task.template = templates.get(task.template_id) ?? null
       task.requester = profiles.get(task.requester_id) ?? null
@@ -429,7 +487,7 @@ export class MockDataService implements DataService {
     }
 
     // Activity — enrich partial objects using the in-memory maps
-    const activity: ActivityFeedItem[] = (rawActivity as RawActivityItem[]).map(
+    const activity: ActivityFeedItem[] = fromJson<RawActivityItem[]>(rawActivity).map(
       (item) => {
         const donorProfile = profiles.get(item.donor.id)
         const fullTask = tasks.get(item.task.id)
@@ -465,7 +523,7 @@ export class MockDataService implements DataService {
           repo_profile: null,
           template_id: '',
           template: null,
-          task_type: item.task.task_type as TaskType,
+          task_type: includes(KNOWN_TASK_TYPES, item.task.task_type) ? item.task.task_type : 'write-tests',
           requester_id: '',
           requester: null,
           status: 'open',
@@ -486,7 +544,7 @@ export class MockDataService implements DataService {
           id: item.id,
           donor,
           task,
-          action: item.action as ActivityFeedItem['action'],
+          action: includes(KNOWN_ACTIVITY_ACTIONS, item.action) ? item.action : 'completed',
           pr_url: item.pr_url,
           created_at: item.created_at,
         }
@@ -494,7 +552,7 @@ export class MockDataService implements DataService {
     )
 
     // Stats — enrich top-donor profiles from in-memory map
-    const rawS = rawStats as RawStats
+    const rawS = fromJson<RawStats>(rawStats)
     const stats: PlatformStats = {
       ...rawS,
       top_donors_this_week: rawS.top_donors_this_week.map((d) => {
@@ -525,7 +583,7 @@ export class MockDataService implements DataService {
     }
 
     // Pricing
-    const pricing = flattenPricing(rawPricing as RawPricing)
+    const pricing = flattenPricing(fromJson<RawPricing>(rawPricing))
 
     return {
       tasks,
@@ -562,7 +620,7 @@ export class MockDataService implements DataService {
     // Filter by token_estimate bucket
     if (filters?.token_estimate && filters.token_estimate !== 'any') {
       results = results.filter((t) =>
-        matchesTokenFilter(t.template, filters.token_estimate as string),
+        matchesTokenFilter(t.template, filters.token_estimate ?? 'any'),
       )
     }
 
@@ -618,7 +676,10 @@ export class MockDataService implements DataService {
       repo_profile: null,
       template_id: data.template_id,
       template,
-      task_type: (template?.slug ?? 'write-tests') as TaskType,
+      task_type: ((): TaskType => {
+        const slug = template?.slug ?? ''
+        return includes(KNOWN_TASK_TYPES, slug) ? slug : 'write-tests'
+      })(),
       requester_id: userId,
       requester,
       status: 'open',

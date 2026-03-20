@@ -37,7 +37,8 @@ export async function buildRepoProfile(owner: string, repo: string): Promise<Rep
   if (packageJsonResult.status === 'fulfilled' && packageJsonResult.value !== null) {
     try {
       const raw = Buffer.from(packageJsonResult.value.content, 'base64').toString('utf-8')
-      packageJson = JSON.parse(raw) as Record<string, unknown>
+      // JSON.parse returns `any`, which satisfies PackageJsonLike without an assertion.
+      packageJson = JSON.parse(raw)
     } catch {
       // Malformed package.json — continue with null.
     }

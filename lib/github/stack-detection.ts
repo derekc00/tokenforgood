@@ -34,17 +34,25 @@ export function stackInfoFromProfile(profile: RepoProfile): StackInfo {
 // Stack detection from raw repo data
 // ---------------------------------------------------------------------------
 
-type PackageJsonLike = Record<string, unknown>
+/**
+ * Typed shape for the subset of package.json fields we inspect.
+ * All fields are optional so callers can pass partial or full parsed objects.
+ */
+interface PackageJsonLike {
+  dependencies?: Record<string, unknown>
+  devDependencies?: Record<string, unknown>
+  scripts?: Record<string, string>
+}
 
 function getDeps(pkg: PackageJsonLike): string[] {
   return [
-    ...Object.keys((pkg.dependencies as Record<string, unknown>) ?? {}),
-    ...Object.keys((pkg.devDependencies as Record<string, unknown>) ?? {}),
+    ...Object.keys(pkg.dependencies ?? {}),
+    ...Object.keys(pkg.devDependencies ?? {}),
   ]
 }
 
 function getScripts(pkg: PackageJsonLike): string[] {
-  return Object.values((pkg.scripts as Record<string, string>) ?? {})
+  return Object.values(pkg.scripts ?? {})
 }
 
 function hasFile(rootFiles: string[], ...names: string[]): boolean {

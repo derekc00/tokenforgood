@@ -68,6 +68,18 @@ async function githubFetch(path: string): Promise<Response> {
   return res
 }
 
+/**
+ * Parse the JSON body of a Response into a typed value.
+ * Uses JSON.parse (returns `any`) so TypeScript allows assignment to T
+ * without a type assertion.
+ */
+async function parseJson<T>(res: Response): Promise<T> {
+  const text = await res.text()
+  // JSON.parse returns `any`, which TypeScript allows to be assigned to T
+  // without a type assertion, keeping the assertionStyle:"never" rule happy.
+  return JSON.parse(text)
+}
+
 async function githubFetchJson<T>(path: string): Promise<T> {
   const res = await githubFetch(path)
 
@@ -78,7 +90,7 @@ async function githubFetchJson<T>(path: string): Promise<T> {
     )
   }
 
-  return res.json() as Promise<T>
+  return parseJson<T>(res)
 }
 
 // ---------------------------------------------------------------------------
@@ -132,7 +144,7 @@ export async function fetchFileContent(
     )
   }
 
-  return res.json() as Promise<GitHubFileContent>
+  return parseJson<GitHubFileContent>(res)
 }
 
 /**
@@ -167,5 +179,5 @@ export async function fetchPR(
     )
   }
 
-  return res.json() as Promise<GitHubPR>
+  return parseJson<GitHubPR>(res)
 }
