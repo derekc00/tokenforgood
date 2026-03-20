@@ -54,21 +54,24 @@ export function CopyPromptModal({ open, onOpenChange, task }: CopyPromptModalPro
 
   const isReview = task?.source_type === 'pull-request'
 
+  // Only include section state in the query for build tasks (review tasks ignore sections)
+  const sectionsQuery = (() => {
+    if (isReview) return ''
+    const parts: string[] = []
+    if (installDeps) parts.push('install_deps')
+    if (build) parts.push('build')
+    if (runTests) parts.push('run_tests')
+    return parts.length > 0 ? `?sections=${parts.join(',')}` : ''
+  })()
+
   const fetchPrompt = useCallback(async () => {
     if (!task) return
 
     setLoading(true)
     setError(null)
 
-    const sections: string[] = []
-    if (installDeps) sections.push('install_deps')
-    if (build) sections.push('build')
-    if (runTests) sections.push('run_tests')
-
-    const query = sections.length > 0 ? `?sections=${sections.join(',')}` : ''
-
     try {
-      const res = await fetch(`/api/tasks/${task.id}/prompt${query}`)
+      const res = await fetch(`/api/tasks/${task.id}/prompt${sectionsQuery}`)
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: 'Unknown error' }))
         setError(body.error ?? `Error ${res.status}`)
@@ -81,7 +84,7 @@ export function CopyPromptModal({ open, onOpenChange, task }: CopyPromptModalPro
     } finally {
       setLoading(false)
     }
-  }, [task, installDeps, build, runTests])
+  }, [task, sectionsQuery])
 
   // Fetch prompt when modal opens or sections change
   useEffect(() => {

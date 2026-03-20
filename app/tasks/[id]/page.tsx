@@ -17,10 +17,10 @@ import rehypeSanitize from 'rehype-sanitize'
 
 import { getDataService } from '@/lib/services'
 import { type Task } from '@/lib/types'
-// CLI command removed — users copy prompts directly from the modal
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
+import { CopyPromptCTA } from './copy-prompt-cta'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -498,12 +498,7 @@ export default async function TaskPage({
                 </p>
               </div>
 
-              <Link
-                href="/"
-                className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
-              >
-                Copy Prompt
-              </Link>
+              <CopyPromptCTA task={task} />
 
               <p className="text-xs text-muted-foreground">
                 {task.source_type === 'pull-request'
