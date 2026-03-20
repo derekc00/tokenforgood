@@ -448,6 +448,7 @@ export class MockDataService implements DataService {
         }
 
         // Construct a minimal Task if the full one is not in the map
+        const [repoOwner = '', repoName = ''] = item.task.repo_full_name.split('/')
         const task: Task = fullTask ?? {
           id: item.task.id,
           source_type: 'issue',
@@ -457,8 +458,8 @@ export class MockDataService implements DataService {
           github_issue_body_sanitized: '',
           github_pr_url: null,
           github_pr_number: null,
-          repo_owner: item.task.repo_full_name.split('/')[0] ?? '',
-          repo_name: item.task.repo_full_name.split('/')[1] ?? '',
+          repo_owner: repoOwner,
+          repo_name: repoName,
           repo_full_name: item.task.repo_full_name,
           repo_profile: null,
           template_id: '',
@@ -668,6 +669,8 @@ export class MockDataService implements DataService {
     const cutoff = Date.now() - maxAgeHours * 60 * 60 * 1000
     let expired = 0
 
+    const now = new Date().toISOString()
+
     for (const [id, task] of this.store.tasks) {
       if (
         task.status === 'picked' &&
@@ -677,7 +680,7 @@ export class MockDataService implements DataService {
           ...task,
           status: 'open',
           pick_count: 0,
-          updated_at: new Date().toISOString(),
+          updated_at: now,
         })
         expired++
       }
