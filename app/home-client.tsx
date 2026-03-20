@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { toast } from 'sonner'
-import { Zap, ChevronDown } from 'lucide-react'
+import { ChevronDown, Shield, Wrench } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -19,9 +19,9 @@ import { TaskCardList } from '@/components/task-card-list'
 import { ActivityTicker } from '@/components/activity-ticker'
 import { StatsStrip } from '@/components/stats-strip'
 import { RequestTaskModal } from '@/components/request-task-modal'
-import { DonateRunModal } from '@/components/donate-run-modal'
+import { CopyPromptModal } from '@/components/copy-prompt-modal'
 import { useRequestModal } from '@/components/use-request-modal'
-import { useDonateModal } from '@/components/use-donate-modal'
+import { useCopyPromptModal } from '@/components/use-copy-prompt-modal'
 
 import type {
   Task,
@@ -29,7 +29,6 @@ import type {
   PlatformStats,
   ActivityFeedItem,
   TopDonor,
-  ProviderPricing,
 } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
@@ -42,68 +41,6 @@ export interface HomeClientProps {
   stats: PlatformStats
   activities: ActivityFeedItem[]
   topDonors: TopDonor[]
-  providerPricing: ProviderPricing[]
-}
-
-// ---------------------------------------------------------------------------
-// Quick Donate Chip
-// ---------------------------------------------------------------------------
-
-function QuickDonateChip({
-  lastBudget,
-  lastProvider,
-  tasks,
-  onGenerated,
-}: {
-  lastBudget: number
-  lastProvider: string
-  tasks: Task[]
-  onGenerated: () => void
-}) {
-  const [copied, setCopied] = React.useState(false)
-
-  async function handleRepeat() {
-    // Re-use the same greedy selection logic: just grab open tasks up to budget
-    const openTasks = tasks.filter((t) => t.status === 'open').slice(0, 3)
-    const ids = openTasks.map((t) => t.id)
-    const command = `npx tokenforgood run ${ids.join(' ')}`
-
-    try {
-      await navigator.clipboard.writeText(command)
-    } catch {
-      // clipboard may be blocked; fail silently
-    }
-
-    setCopied(true)
-    toast.success('Command copied!', {
-      description: `${openTasks.length} task${openTasks.length !== 1 ? 's' : ''} · ~$${lastBudget} estimated`,
-      action: {
-        label: 'Undo',
-        onClick: () => { /* no-op — command is already in clipboard */ },
-      },
-    })
-    setTimeout(() => setCopied(false), 3000)
-    onGenerated()
-  }
-
-  const providerLabel =
-    lastProvider === 'claude-max'
-      ? 'Claude Max'
-      : lastProvider === 'claude-pro'
-        ? 'Claude Pro'
-        : lastProvider
-
-  return (
-    <button
-      onClick={handleRepeat}
-      className="inline-flex items-center gap-1.5 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-xs font-medium text-yellow-600 transition-colors hover:bg-yellow-500/20 dark:text-yellow-400"
-    >
-      <Zap className="size-3 fill-current" />
-      {copied
-        ? 'Copied!'
-        : `Repeat last donation ($${lastBudget} · ${providerLabel})`}
-    </button>
-  )
 }
 
 // ---------------------------------------------------------------------------
@@ -172,19 +109,22 @@ function HowItWorksBand() {
     <section id="how-it-works" className="rounded-xl border border-border bg-card px-6 py-8">
       <h2 className="mb-6 text-sm font-semibold text-foreground">How It Works</h2>
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        {/* For Requesters */}
+        {/* Review a PR (safe) */}
         <div>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            For Requesters
-          </p>
+          <div className="mb-3 flex items-center gap-1.5">
+            <Shield className="size-4 text-emerald-500" />
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Review a PR (safe)
+            </p>
+          </div>
           <ol className="space-y-3">
             {[
-              'Paste a GitHub issue URL',
-              'Pick a template (test suite, audit, etc.)',
-              'Your task is live on the board — AI donors will handle it',
+              'Browse the task board for review tasks',
+              'Click "Copy Prompt" — the AI-ready prompt is copied',
+              'Paste into your AI tool — it reviews the diff and posts findings',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[11px] font-semibold text-muted-foreground">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 font-mono text-[11px] font-semibold text-emerald-600">
                   {i + 1}
                 </span>
                 <span className="text-sm text-foreground">{step}</span>
@@ -193,19 +133,22 @@ function HowItWorksBand() {
           </ol>
         </div>
 
-        {/* For Donors */}
+        {/* Build from Issue (advanced) */}
         <div>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            For Donors
-          </p>
+          <div className="mb-3 flex items-center gap-1.5">
+            <Wrench className="size-4 text-amber-500" />
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Build from Issue (advanced)
+            </p>
+          </div>
           <ol className="space-y-3">
             {[
-              'Browse the task board',
-              'Click "Run This" — a command is generated and copied',
-              'Paste it → Claude forks, codes, opens a draft PR',
+              'Browse the task board for build tasks',
+              'Click "Copy Prompt" — review the prompt and advanced options',
+              'Paste into your AI tool — it clones, codes, and opens a draft PR',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[11px] font-semibold text-muted-foreground">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-amber-500/10 font-mono text-[11px] font-semibold text-amber-600">
                   {i + 1}
                 </span>
                 <span className="text-sm text-foreground">{step}</span>
@@ -225,23 +168,23 @@ function HowItWorksBand() {
 const FAQ_ITEMS: { q: string; a: string }[] = [
   {
     q: 'What AI tools does this work with?',
-    a: 'Claude Code (Claude Max / Pro) is the primary target. Any terminal-based AI coding tool that accepts a task prompt and can open a GitHub PR will work.',
+    a: 'Any AI coding tool that accepts a prompt — Claude Code, Codex CLI, Gemini, ChatGPT, etc. Copy the prompt, paste it into your tool, and let it work.',
   },
   {
-    q: 'Do I need coding skills to donate?',
-    a: "No. Claude handles the implementation. You paste one command in a terminal and walk away — the AI reads the issue, writes code, and opens a draft PR.",
+    q: 'Do I need coding skills to help?',
+    a: 'No. The AI handles the implementation. You copy a prompt, paste it into your tool, and walk away. For PR reviews, the AI reads the diff and writes findings.',
   },
   {
-    q: 'Is this allowed by AI providers?',
-    a: 'TokenForGood is a task board. You run your own licensed AI tools on your own machine, contributing to public open source repos. That is normal open source development.',
+    q: 'Is this safe? What if the AI runs something dangerous?',
+    a: 'PR review tasks instruct a read-only clone — no install, no execution. Build tasks may instruct the AI to run commands. Your AI tool has its own permission model — review the prompt before executing.',
   },
   {
-    q: 'What if the PR gets rejected?',
-    a: "Tasks produce draft PRs. Maintainers review and can close them. Donor effort is minimal — a single copy-paste. The worst outcome is a closed draft PR.",
+    q: 'What if I never finish or the PR gets rejected?',
+    a: 'Tasks are non-exclusive — multiple people can work the same task. If you walk away, the task stays on the board. Draft PRs can be closed with no harm done.',
   },
   {
     q: 'Who can post tasks?',
-    a: 'Anyone with a GitHub account. Paste a public GitHub issue URL, pick a template, and your task is live on the board immediately.',
+    a: 'Anyone with a GitHub account. Paste a public GitHub issue or PR URL, pick a template, and your task is live on the board immediately.',
   },
 ]
 
@@ -280,7 +223,6 @@ export function HomeClient({
   stats,
   activities,
   topDonors,
-  providerPricing,
 }: HomeClientProps) {
   const {
     open: requestOpen,
@@ -289,49 +231,41 @@ export function HomeClient({
   } = useRequestModal()
 
   const {
-    open: donateOpen,
-    openModal: openDonateModal,
-    closeModal: closeDonateModal,
-    lastBudget,
-    lastProvider,
-  } = useDonateModal()
+    open: copyPromptOpen,
+    currentTask,
+    openModal: openCopyPromptModal,
+    closeModal: closeCopyPromptModal,
+  } = useCopyPromptModal()
 
-  // When "Run This" is clicked on a specific card, open the donate modal
-  // (the modal auto-selects tasks; pre-selection by task id isn't wired yet,
-  // so opening it is the correct behaviour for now)
-  const handleRunThis = React.useCallback(
-    (_task: Task) => {
-      openDonateModal()
+  const handleCopyPrompt = React.useCallback(
+    (task: Task) => {
+      openCopyPromptModal(task)
     },
-    [openDonateModal],
+    [openCopyPromptModal],
   )
 
   const handleRequestSubmit = React.useCallback(
-    async (_data: { github_issue_url: string; template_id: string }) => {
-      // Mock: just close after a short delay
-      await new Promise((r) => setTimeout(r, 800))
+    async (data: {
+      github_issue_url?: string
+      github_pr_url?: string
+      template_id: string
+    }) => {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: 'Unknown error' }))
+        toast.error(body.error ?? 'Failed to create task')
+        throw new Error(body.error)
+      }
+
+      toast.success('Task posted!')
     },
     [],
   )
-
-  const openTasks = React.useMemo(
-    () => tasks.filter((t) => t.status === 'open'),
-    [tasks],
-  )
-
-  // Show the quick-donate chip only for returning donors (lastBudget > 0)
-  // The store initialises lastBudget at 25, so we also check localStorage
-  // via a mounted guard to avoid hydration mismatch.
-  const [mounted, setMounted] = React.useState(false)
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Consider a donor "returning" if they've manually set a session before.
-  // Since we can't persist across page loads without auth, we check if
-  // the value is still the default (25 + 'claude-max'); a real session
-  // would keep these after they hit "Generate Command".
-  const isReturningDonor = mounted && lastBudget > 0 && lastProvider !== ''
 
   return (
     <>
@@ -339,17 +273,17 @@ export function HomeClient({
       <section className="border-b border-border bg-background px-4 py-10 sm:py-14">
         <div className="mx-auto max-w-4xl space-y-4">
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            One-click AI contributions to open source.
+            Help open source maintainers clear their backlog.
           </h1>
           <p className="max-w-xl text-base text-muted-foreground">
-            Browse tasks, paste one command, walk away.
+            Browse tasks, copy a prompt, paste into your AI tool.
             <br />
-            Claude does the rest.
+            Review PRs or build features — your tokens, their project.
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <Button onClick={openRequestModal}>Request a Task</Button>
-            <Button variant="outline" onClick={openDonateModal}>
-              Donate &amp; Run
+            <Button variant="outline" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>
+              How It Works
             </Button>
           </div>
         </div>
@@ -359,21 +293,9 @@ export function HomeClient({
         {/* Stats Strip */}
         <StatsStrip stats={stats} />
 
-        {/* Quick Donate Chip — returning donors only */}
-        {isReturningDonor && (
-          <div className="flex items-center">
-            <QuickDonateChip
-              lastBudget={lastBudget}
-              lastProvider={lastProvider}
-              tasks={tasks}
-              onGenerated={() => {}}
-            />
-          </div>
-        )}
-
         {/* Task Card List */}
         <section>
-          <TaskCardList tasks={tasks} onRunThis={handleRunThis} />
+          <TaskCardList tasks={tasks} onRunThis={handleCopyPrompt} />
         </section>
 
         <Separator />
@@ -408,12 +330,10 @@ export function HomeClient({
         onSubmit={handleRequestSubmit}
       />
 
-      <DonateRunModal
-        open={donateOpen}
-        onOpenChange={(open) => (open ? openDonateModal() : closeDonateModal())}
-        availableTasks={openTasks}
-        providerPricing={providerPricing}
-        onGenerateCommand={() => {}}
+      <CopyPromptModal
+        open={copyPromptOpen}
+        onOpenChange={(open) => (open ? undefined : closeCopyPromptModal())}
+        task={currentTask}
       />
     </>
   )

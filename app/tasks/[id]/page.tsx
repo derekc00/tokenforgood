@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Clock,
   Star,
-  Terminal,
   Cpu,
   FileCode2,
   ChevronRight,
@@ -18,7 +17,7 @@ import rehypeSanitize from 'rehype-sanitize'
 
 import { getDataService } from '@/lib/services'
 import { type Task } from '@/lib/types'
-import { generateSingleTaskCommand } from '@/lib/prompt/cli-command'
+// CLI command removed — users copy prompts directly from the modal
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
@@ -266,7 +265,6 @@ export default async function TaskPage({
   }
 
   const { template, repo_profile, requester } = task
-  const cliCommand = generateSingleTaskCommand(task.id)
   const displayPrompt = buildDisplayPrompt(task)
   const approxTokens = estimateTokenCount(displayPrompt)
 
@@ -490,40 +488,28 @@ export default async function TaskPage({
         {/* Sidebar */}
         {/* ================================================================ */}
         <aside className="space-y-5">
-          {/* Donate & Run CTA --------------------------------------------- */}
+          {/* Help Open Source CTA ------------------------------------------ */}
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="space-y-4 p-5">
               <div className="space-y-1">
-                <h3 className="font-semibold text-foreground">Donate & Run</h3>
+                <h3 className="font-semibold text-foreground">Help Open Source</h3>
                 <p className="text-xs text-muted-foreground">
                   Use your spare AI tokens to help this open source project.
                 </p>
               </div>
 
-              <a
-                href={task.github_issue_url}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/"
                 className={cn(buttonVariants({ size: 'lg' }), 'w-full')}
               >
-                Run This Task
-              </a>
+                Copy Prompt
+              </Link>
 
-              <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">
-                  Or paste this command in your terminal:
-                </p>
-                <div className="flex items-center gap-1.5 rounded-md bg-muted px-3 py-2">
-                  <Terminal className="size-3.5 shrink-0 text-muted-foreground" />
-                  <code className="flex-1 truncate font-mono text-xs text-foreground">
-                    {cliCommand}
-                  </code>
-                  <CopyButton text={cliCommand} iconOnly />
-                </div>
-                <p className="text-xs text-muted-foreground/70">
-                  Paste in your terminal to start.
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                {task.source_type === 'pull-request'
+                  ? 'Copy the review prompt and paste it into your AI tool.'
+                  : 'Copy the build prompt, paste into your AI tool, and it opens a draft PR.'}
+              </p>
             </CardContent>
           </Card>
 

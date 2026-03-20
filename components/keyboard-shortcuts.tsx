@@ -2,11 +2,9 @@
 
 import { useEffect } from 'react'
 import { useRequestModal } from '@/components/use-request-modal'
-import { useDonateModal } from '@/components/use-donate-modal'
 
 export function KeyboardShortcuts() {
   const { openModal: openRequestModal } = useRequestModal()
-  const { openModal: openDonateModal } = useDonateModal()
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -22,10 +20,6 @@ export function KeyboardShortcuts() {
       if (e.metaKey || e.ctrlKey || e.altKey) return
 
       switch (e.key) {
-        case 'd':
-          e.preventDefault()
-          openDonateModal()
-          break
         case 'r':
           e.preventDefault()
           openRequestModal()
@@ -39,7 +33,7 @@ export function KeyboardShortcuts() {
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [openDonateModal, openRequestModal])
+  }, [openRequestModal])
 
   return null // No UI, just effects
 }

@@ -27,8 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { GitHubIssueUrlSchema } from "@/lib/schemas"
-import type { Template, TemplateCategory } from "@/lib/types"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { GitHubIssueUrlSchema, GitHubPRUrlSchema } from "@/lib/schemas"
+import type { Template, TemplateCategory, SourceType } from "@/lib/types"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,21 +39,25 @@ interface RequestTaskModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   templates: Template[]
-  onSubmit: (data: { github_issue_url: string; template_id: string }) => Promise<void>
+  onSubmit: (data: {
+    github_issue_url?: string
+    github_pr_url?: string
+    template_id: string
+  }) => Promise<void>
 }
 
-interface ParsedIssue {
+interface ParsedSource {
   owner: string
   repo: string
   number: number
 }
 
 // ---------------------------------------------------------------------------
-// Form schema — only the two fields the modal controls
+// Form schema — unified with optional URL fields
 // ---------------------------------------------------------------------------
 
 const FormSchema = z.object({
-  github_issue_url: GitHubIssueUrlSchema,
+  source_url: z.string().min(1, "URL is required"),
   template_id: z.string().min(1, "Please select a template"),
 })
 
@@ -62,29 +67,35 @@ type FormValues = z.infer<typeof FormSchema>
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Parse a valid GitHub issue URL into its parts. Assumes URL is already valid. */
-function parseIssueUrl(url: string): ParsedIssue | null {
+function parseIssueUrl(url: string): ParsedSource | null {
   const match = url.match(
     /^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/issues\/(\d+)$/,
   )
   if (!match) return null
-  return {
-    owner: match[1],
-    repo: match[2],
-    number: parseInt(match[3], 10),
-  }
+  return { owner: match[1], repo: match[2], number: parseInt(match[3], 10) }
 }
 
-/**
- * Suggest the most relevant template slug based on keywords in the issue URL
- * (owner/repo) or a title string. Returns a template id when a match is found.
- */
-function suggestTemplateId(
-  issueUrl: string,
-  templates: Template[],
-): string | null {
-  const lower = issueUrl.toLowerCase()
+function parsePRUrl(url: string): ParsedSource | null {
+  const match = url.match(
+    /^https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)$/,
+  )
+  if (!match) return null
+  return { owner: match[1], repo: match[2], number: parseInt(match[3], 10) }
+}
 
+function suggestTemplateId(
+  url: string,
+  templates: Template[],
+  sourceType: SourceType,
+): string | null {
+  if (sourceType === "pull-request") {
+    const fallback = templates.find(
+      (t) => t.source_type === "pull-request" && t.slug === "review-pr",
+    )
+    return fallback?.id ?? null
+  }
+
+  const lower = url.toLowerCase()
   const rules: Array<{ keywords: string[]; slug: string }> = [
     { keywords: ["test", "spec", "coverage"], slug: "write-tests" },
     { keywords: ["security", "vulnerability", "cve", "auth"], slug: "security-audit" },
@@ -96,12 +107,11 @@ function suggestTemplateId(
 
   for (const rule of rules) {
     if (rule.keywords.some((kw) => lower.includes(kw))) {
-      const tpl = templates.find((t) => t.slug === rule.slug)
+      const tpl = templates.find((t) => t.slug === rule.slug && t.source_type === "issue")
       if (tpl) return tpl.id
     }
   }
 
-  // Default
   const fallback = templates.find((t) => t.slug === "implement-feature")
   return fallback?.id ?? null
 }
@@ -130,15 +140,15 @@ export function RequestTaskModal({
   templates,
   onSubmit,
 }: RequestTaskModalProps) {
-  const [fetchState, setFetchState] = React.useState<
-    "idle" | "fetching" | "done"
-  >("idle")
-  const [parsedIssue, setParsedIssue] = React.useState<ParsedIssue | null>(null)
-  const [submitState, setSubmitState] = React.useState<
-    "idle" | "loading" | "success"
-  >("idle")
+  const [sourceType, setSourceType] = React.useState<SourceType>("issue")
+  const [fetchState, setFetchState] = React.useState<"idle" | "fetching" | "done">("idle")
+  const [parsedSource, setParsedSource] = React.useState<ParsedSource | null>(null)
+  const [submitState, setSubmitState] = React.useState<"idle" | "loading" | "success">("idle")
+  const [urlError, setUrlError] = React.useState<string | null>(null)
 
   const fetchTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isIssueMode = sourceType === "issue"
 
   const {
     register,
@@ -150,39 +160,65 @@ export function RequestTaskModal({
   } = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     mode: "onChange",
-    defaultValues: {
-      github_issue_url: "",
-      template_id: "",
-    },
+    defaultValues: { source_url: "", template_id: "" },
   })
 
-  const urlValue = watch("github_issue_url")
+  const urlValue = watch("source_url")
   const templateIdValue = watch("template_id")
 
-  // When the URL changes and is valid, simulate a fetch + auto-suggest template
-  React.useEffect(() => {
-    if (fetchTimerRef.current) {
-      clearTimeout(fetchTimerRef.current)
-    }
+  // Filter templates by source_type
+  const filteredTemplates = React.useMemo(
+    () => templates.filter((t) => t.source_type === sourceType),
+    [templates, sourceType],
+  )
 
-    const result = GitHubIssueUrlSchema.safeParse(urlValue)
-    if (!result.success) {
+  // Group filtered templates by category
+  const templatesByCategory = React.useMemo(() => {
+    const groups: Record<TemplateCategory, Template[]> = {
+      "code-generation": [],
+      "review-analysis": [],
+    }
+    for (const tpl of filteredTemplates) {
+      groups[tpl.category].push(tpl)
+    }
+    return groups
+  }, [filteredTemplates])
+
+  // Validate URL and auto-suggest template
+  React.useEffect(() => {
+    if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current)
+
+    if (!urlValue) {
       setFetchState("idle")
-      setParsedIssue(null)
+      setParsedSource(null)
+      setUrlError(null)
       return
     }
 
+    const schema = isIssueMode ? GitHubIssueUrlSchema : GitHubPRUrlSchema
+    const result = schema.safeParse(urlValue)
+    if (!result.success) {
+      setFetchState("idle")
+      setParsedSource(null)
+      setUrlError(
+        isIssueMode
+          ? "Must be a valid GitHub issue URL (e.g., https://github.com/owner/repo/issues/123)"
+          : "Must be a valid GitHub PR URL (e.g., https://github.com/owner/repo/pull/123)",
+      )
+      return
+    }
+
+    setUrlError(null)
     setFetchState("fetching")
-    setParsedIssue(null)
+    setParsedSource(null)
 
     fetchTimerRef.current = setTimeout(() => {
-      const parsed = parseIssueUrl(urlValue)
-      setParsedIssue(parsed)
+      const parsed = isIssueMode ? parseIssueUrl(urlValue) : parsePRUrl(urlValue)
+      setParsedSource(parsed)
       setFetchState("done")
 
-      // Auto-suggest template only when user hasn't already picked one
       if (!templateIdValue) {
-        const suggested = suggestTemplateId(urlValue, templates)
+        const suggested = suggestTemplateId(urlValue, templates, sourceType)
         if (suggested) {
           setValue("template_id", suggested, { shouldValidate: true })
         }
@@ -192,17 +228,28 @@ export function RequestTaskModal({
     return () => {
       if (fetchTimerRef.current) clearTimeout(fetchTimerRef.current)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlValue])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlValue, sourceType])
 
-  // Reset everything when the dialog closes
+  // Reset template when source type changes
+  React.useEffect(() => {
+    setValue("template_id", "", { shouldValidate: false })
+    setValue("source_url", "", { shouldValidate: false })
+    setParsedSource(null)
+    setFetchState("idle")
+    setUrlError(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceType])
+
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
         reset()
+        setSourceType("issue")
         setFetchState("idle")
-        setParsedIssue(null)
+        setParsedSource(null)
         setSubmitState("idle")
+        setUrlError(null)
       }
       onOpenChange(nextOpen)
     },
@@ -210,9 +257,20 @@ export function RequestTaskModal({
   )
 
   const handleFormSubmit = async (data: FormValues) => {
+    // Validate URL format one more time
+    const schema = isIssueMode ? GitHubIssueUrlSchema : GitHubPRUrlSchema
+    const urlResult = schema.safeParse(data.source_url)
+    if (!urlResult.success) {
+      setUrlError(urlResult.error.issues[0]?.message ?? "Invalid URL")
+      return
+    }
+
     setSubmitState("loading")
     try {
-      await onSubmit(data)
+      const payload = isIssueMode
+        ? { github_issue_url: data.source_url, template_id: data.template_id }
+        : { github_pr_url: data.source_url, template_id: data.template_id }
+      await onSubmit(payload)
       setSubmitState("success")
     } catch {
       setSubmitState("idle")
@@ -221,19 +279,7 @@ export function RequestTaskModal({
 
   const isSubmitting = submitState === "loading"
   const isSuccess = submitState === "success"
-  const canSubmit = isValid && !isSubmitting && !isSuccess
-
-  // Group templates by category for the select
-  const templatesByCategory = React.useMemo(() => {
-    const groups: Record<TemplateCategory, Template[]> = {
-      "code-generation": [],
-      "review-analysis": [],
-    }
-    for (const tpl of templates) {
-      groups[tpl.category].push(tpl)
-    }
-    return groups
-  }, [templates])
+  const canSubmit = isValid && !isSubmitting && !isSuccess && !urlError
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -245,39 +291,60 @@ export function RequestTaskModal({
             <DialogHeader>
               <DialogTitle>Request a task</DialogTitle>
               <DialogDescription>
-                Paste a GitHub issue URL and choose how you want it solved.
+                Paste a GitHub URL and choose how you want it handled.
               </DialogDescription>
             </DialogHeader>
 
             <div className="flex flex-col gap-4 py-4">
-              {/* Step 1 — GitHub issue URL */}
+              {/* Source type toggle */}
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="github_issue_url">
-                  GitHub issue URL
+                <Label>Source type</Label>
+                <ToggleGroup
+                  value={[sourceType]}
+                  onValueChange={(vals) => {
+                    const next = vals[0] as SourceType | undefined
+                    if (next) setSourceType(next)
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <ToggleGroupItem value="issue">GitHub Issue</ToggleGroupItem>
+                  <ToggleGroupItem value="pull-request">GitHub PR</ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              {/* URL input */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="source_url">
+                  {isIssueMode ? "GitHub issue URL" : "GitHub PR URL"}
                   <span className="ml-1 text-destructive" aria-hidden>*</span>
                 </Label>
                 <Input
-                  id="github_issue_url"
+                  id="source_url"
                   type="url"
-                  placeholder="https://github.com/owner/repo/issues/123"
+                  placeholder={
+                    isIssueMode
+                      ? "https://github.com/owner/repo/issues/123"
+                      : "https://github.com/owner/repo/pull/123"
+                  }
                   disabled={isSubmitting}
-                  aria-invalid={!!errors.github_issue_url}
-                  {...register("github_issue_url")}
+                  aria-invalid={!!urlError || !!errors.source_url}
+                  {...register("source_url")}
                 />
-                {errors.github_issue_url && (
+                {(urlError || errors.source_url) && (
                   <p className="text-xs text-destructive" role="alert">
-                    {errors.github_issue_url.message}
+                    {urlError ?? errors.source_url?.message}
                   </p>
                 )}
 
-                {/* Issue preview */}
+                {/* Source preview */}
                 {fetchState === "fetching" && (
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Loader2Icon className="size-3 animate-spin" aria-hidden />
-                    Fetching issue&hellip;
+                    {isIssueMode ? "Fetching issue\u2026" : "Fetching PR\u2026"}
                   </p>
                 )}
-                {fetchState === "done" && parsedIssue && (
+                {fetchState === "done" && parsedSource && (
                   <div className="flex items-start gap-1.5 rounded-md border border-border bg-muted/40 px-2.5 py-2 text-xs">
                     <CheckCircle2Icon
                       className="mt-px size-3.5 shrink-0 text-green-500"
@@ -285,17 +352,17 @@ export function RequestTaskModal({
                     />
                     <div className="flex flex-col gap-0.5">
                       <span className="font-medium text-foreground">
-                        {parsedIssue.owner}/{parsedIssue.repo}
+                        {parsedSource.owner}/{parsedSource.repo}
                       </span>
                       <span className="text-muted-foreground">
-                        Issue #{parsedIssue.number}
+                        {isIssueMode ? `Issue #${parsedSource.number}` : `PR #${parsedSource.number}`}
                       </span>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Step 2 — Template selection */}
+              {/* Template selection */}
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="template_select">
                   Template
@@ -345,7 +412,7 @@ export function RequestTaskModal({
                 {/* Selected template detail card */}
                 {templateIdValue && (
                   <TemplateDetailCard
-                    template={templates.find((t) => t.id === templateIdValue) ?? null}
+                    template={filteredTemplates.find((t) => t.id === templateIdValue) ?? null}
                   />
                 )}
               </div>

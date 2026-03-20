@@ -4,15 +4,12 @@ import { HomeClient } from './home-client'
 export default async function HomePage() {
   const ds = getDataService()
 
-  const [tasksResult, templates, stats, activities, pricing] = await Promise.all(
-    [
-      ds.getTasks(),
-      ds.getTemplates(),
-      ds.getPlatformStats(),
-      ds.getActivityFeed(25),
-      ds.getProviderPricing(),
-    ],
-  )
+  const [tasksResult, templates, stats, activities] = await Promise.all([
+    ds.getTasks(),
+    ds.getTemplates(),
+    ds.getPlatformStats(),
+    ds.getActivityFeed(25),
+  ])
 
   return (
     <HomeClient
@@ -21,7 +18,6 @@ export default async function HomePage() {
       stats={stats}
       activities={activities}
       topDonors={stats.top_donors_this_week.slice(0, 5)}
-      providerPricing={pricing}
     />
   )
 }

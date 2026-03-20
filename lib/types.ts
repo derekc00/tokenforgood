@@ -124,6 +124,7 @@ export interface Template {
   name: string
   description: string
   category: TemplateCategory
+  source_type: SourceType
   output_type: OutputType
   recommended_mode: ExecutionMode
   /** Lower bound of estimated token usage, in thousands */

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { ChevronsUpDown, CheckIcon, ListTodo } from "lucide-react"
 
-import { type Task } from "@/lib/types"
+import { type Task, type SourceType } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,6 +32,7 @@ export interface TaskCardListProps {
 
 type TokenBucket = "any" | "small" | "medium" | "large"
 type StatusFilter = "open" | "in_progress" | "completed"
+type LaneFilter = "all" | "reviews" | "builds"
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -129,6 +130,7 @@ export function TaskCardList({ tasks, onRunThis, isLoading }: TaskCardListProps)
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter | null>(
     "open"
   )
+  const [laneFilter, setLaneFilter] = React.useState<LaneFilter>("all")
 
   const selectedTypeName =
     typeValue === null
@@ -138,6 +140,10 @@ export function TaskCardList({ tasks, onRunThis, isLoading }: TaskCardListProps)
   // Filtered tasks
   const filtered = React.useMemo(() => {
     return tasks.filter((task) => {
+      // Lane filter
+      if (laneFilter === "reviews" && task.source_type !== "pull-request") return false
+      if (laneFilter === "builds" && task.source_type !== "issue") return false
+
       // Type filter
       if (typeValue !== null && task.task_type !== typeValue) return false
 
@@ -152,7 +158,7 @@ export function TaskCardList({ tasks, onRunThis, isLoading }: TaskCardListProps)
 
       return true
     })
-  }, [tasks, typeValue, tokenFilter, statusFilter])
+  }, [tasks, typeValue, tokenFilter, statusFilter, laneFilter])
 
   // Loading state
   if (isLoading) {
@@ -172,6 +178,24 @@ export function TaskCardList({ tasks, onRunThis, isLoading }: TaskCardListProps)
     <div className="space-y-4">
       {/* Filter controls */}
       <div className="flex flex-wrap items-center gap-2">
+        {/* Lane filter */}
+        <ToggleGroup
+          variant="outline"
+          size="sm"
+          value={[laneFilter]}
+          onValueChange={(incoming) => {
+            const next = fromSingleValueArray(
+              incoming,
+              laneFilter,
+            ) as LaneFilter | null
+            setLaneFilter(next ?? "all")
+          }}
+        >
+          <ToggleGroupItem value="all">All</ToggleGroupItem>
+          <ToggleGroupItem value="reviews">Reviews</ToggleGroupItem>
+          <ToggleGroupItem value="builds">Builds</ToggleGroupItem>
+        </ToggleGroup>
+
         {/* Task type combobox */}
         <Popover open={typeOpen} onOpenChange={setTypeOpen}>
           <PopoverTrigger
