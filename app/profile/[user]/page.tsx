@@ -301,9 +301,11 @@ export default async function ProfilePage({
   const allTasksResult = await service.getTasks({ page: 1, per_page: 100 })
   const allTasks = allTasksResult.data
 
-  // Tasks completed (status=completed or verified)
+  // Tasks completed by this user (requester as proxy until auth is wired)
   const completedTasks = allTasks.filter(
-    (t) => t.status === 'completed' || t.status === 'verified',
+    (t) =>
+      (t.status === 'completed' || t.status === 'verified') &&
+      t.requester_id === profile.id,
   )
 
   // Tasks requested by this user

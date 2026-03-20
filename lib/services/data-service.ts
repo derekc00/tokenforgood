@@ -37,7 +37,7 @@ export interface DataService {
   getTasks(filters?: TaskFilterInput): Promise<PaginatedResult<Task>>
   getTask(id: string): Promise<Task | null>
   createTask(
-    data: { github_issue_url: string; template_id: string },
+    data: { github_issue_url?: string; github_pr_url?: string; template_id: string },
     userId: string,
   ): Promise<Task>
   pickTask(taskId: string, donorId?: string): Promise<{ success: boolean; error?: string }>

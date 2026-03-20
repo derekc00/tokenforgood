@@ -590,32 +590,37 @@ export class MockDataService implements DataService {
   }
 
   async createTask(
-    data: { github_issue_url: string; template_id: string },
+    data: { github_issue_url?: string; github_pr_url?: string; template_id: string },
     userId: string,
   ): Promise<Task> {
     const template = this.store.templates.get(data.template_id) ?? null
     const requester = this.store.profiles.get(userId) ?? null
 
-    // Parse owner/repo/issue number from the GitHub URL
-    const urlMatch = data.github_issue_url.match(
-      /github\.com\/([\w.-]+)\/([\w.-]+)\/issues\/(\d+)/,
-    )
+    const isPR = !!data.github_pr_url
+    const url = data.github_pr_url ?? data.github_issue_url ?? ''
+
+    // Parse owner/repo/number from the GitHub URL
+    const urlMatch = isPR
+      ? url.match(/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)/)
+      : url.match(/github\.com\/([\w.-]+)\/([\w.-]+)\/issues\/(\d+)/)
     const repoOwner = urlMatch?.[1] ?? 'unknown'
     const repoName = urlMatch?.[2] ?? 'unknown'
-    const issueNumber = urlMatch?.[3] ? parseInt(urlMatch[3], 10) : 0
+    const number = urlMatch?.[3] ? parseInt(urlMatch[3], 10) : 0
 
     const now = new Date().toISOString()
     const id = generateUuid()
 
     const task: Task = {
       id,
-      source_type: 'issue',
-      github_issue_url: data.github_issue_url,
-      github_issue_number: issueNumber,
-      github_issue_title: `Issue #${issueNumber} from ${repoOwner}/${repoName}`,
+      source_type: isPR ? 'pull-request' : 'issue',
+      github_issue_url: data.github_issue_url ?? '',
+      github_issue_number: isPR ? 0 : number,
+      github_issue_title: isPR
+        ? `PR #${number} from ${repoOwner}/${repoName}`
+        : `Issue #${number} from ${repoOwner}/${repoName}`,
       github_issue_body_sanitized: '',
-      github_pr_url: null,
-      github_pr_number: null,
+      github_pr_url: data.github_pr_url ?? null,
+      github_pr_number: isPR ? number : null,
       repo_owner: repoOwner,
       repo_name: repoName,
       repo_full_name: `${repoOwner}/${repoName}`,
@@ -679,7 +684,6 @@ export class MockDataService implements DataService {
         this.store.tasks.set(id, {
           ...task,
           status: 'open',
-          pick_count: 0,
           updated_at: now,
         })
         expired++
