@@ -12,12 +12,13 @@ import type {
   TaskType,
   RepoProfile,
 } from '@/lib/types'
-import type { CompleteTaskInput, TaskFilterInput } from '@/lib/schemas'
+import type { CompleteTaskInput, CreateTaskInput, TaskFilterInput } from '@/lib/schemas'
 import type {
   DataService,
   PaginatedResult,
   CompleteResult,
 } from './data-service'
+import { parseGitHubIssueUrl, parseGitHubPRUrl } from '@/lib/github'
 
 // JSON imports — Next.js supports these via resolveJsonModule
 import rawTasks from '@/lib/mock-data/tasks.json'
@@ -448,18 +449,19 @@ export class MockDataService implements DataService {
         }
 
         // Construct a minimal Task if the full one is not in the map
-        const [repoOwner = '', repoName = ''] = item.task.repo_full_name.split('/')
-        const task: Task = fullTask ?? {
+        const task: Task = fullTask ?? (() => {
+          const [owner = '', name = ''] = item.task.repo_full_name.split('/')
+          return {
           id: item.task.id,
-          source_type: 'issue',
+          source_type: 'issue' as const,
           github_issue_url: '',
           github_issue_number: 0,
           github_issue_title: item.task.github_issue_title,
           github_issue_body_sanitized: '',
           github_pr_url: null,
           github_pr_number: null,
-          repo_owner: repoOwner,
-          repo_name: repoName,
+          repo_owner: owner,
+          repo_name: name,
           repo_full_name: item.task.repo_full_name,
           repo_profile: null,
           template_id: '',
@@ -478,6 +480,7 @@ export class MockDataService implements DataService {
           updated_at: '',
           tags: [],
         }
+        })()
 
         return {
           id: item.id,
@@ -590,22 +593,18 @@ export class MockDataService implements DataService {
   }
 
   async createTask(
-    data: { github_issue_url?: string; github_pr_url?: string; template_id: string },
+    data: Pick<CreateTaskInput, 'github_issue_url' | 'github_pr_url' | 'template_id'>,
     userId: string,
   ): Promise<Task> {
     const template = this.store.templates.get(data.template_id) ?? null
     const requester = this.store.profiles.get(userId) ?? null
 
-    const isPR = !!data.github_pr_url
-    const url = data.github_pr_url ?? data.github_issue_url ?? ''
-
-    // Parse owner/repo/number from the GitHub URL
-    const urlMatch = isPR
-      ? url.match(/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)/)
-      : url.match(/github\.com\/([\w.-]+)\/([\w.-]+)\/issues\/(\d+)/)
-    const repoOwner = urlMatch?.[1] ?? 'unknown'
-    const repoName = urlMatch?.[2] ?? 'unknown'
-    const number = urlMatch?.[3] ? parseInt(urlMatch[3], 10) : 0
+    const prParsed = data.github_pr_url ? parseGitHubPRUrl(data.github_pr_url) : null
+    const issueParsed = data.github_issue_url ? parseGitHubIssueUrl(data.github_issue_url) : null
+    const isPR = !!prParsed
+    const repoOwner = (prParsed?.owner ?? issueParsed?.owner) ?? 'unknown'
+    const repoName = (prParsed?.repo ?? issueParsed?.repo) ?? 'unknown'
+    const number = prParsed?.prNumber ?? issueParsed?.issueNumber ?? 0
 
     const now = new Date().toISOString()
     const id = generateUuid()

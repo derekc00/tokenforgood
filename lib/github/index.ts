@@ -23,4 +23,4 @@ export { sanitizeIssueBody, wrapAsUntrusted } from './issue-sanitizer'
 export type { StackInfo } from './stack-detection'
 export { detectStack, stackInfoFromProfile } from './stack-detection'
 
-export { buildRepoProfile, parseGitHubIssueUrl } from './repo-profile'
+export { buildRepoProfile, parseGitHubIssueUrl, parseGitHubPRUrl } from './repo-profile'

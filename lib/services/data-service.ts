@@ -8,7 +8,7 @@ import type {
   GeneratedPrompt,
   ProviderPricing,
 } from '@/lib/types'
-import type { CompleteTaskInput, TaskFilterInput } from '@/lib/schemas'
+import type { CompleteTaskInput, CreateTaskInput, TaskFilterInput } from '@/lib/schemas'
 
 // ---------------------------------------------------------------------------
 // Shared result shapes
@@ -37,7 +37,7 @@ export interface DataService {
   getTasks(filters?: TaskFilterInput): Promise<PaginatedResult<Task>>
   getTask(id: string): Promise<Task | null>
   createTask(
-    data: { github_issue_url?: string; github_pr_url?: string; template_id: string },
+    data: Pick<CreateTaskInput, 'github_issue_url' | 'github_pr_url' | 'template_id'>,
     userId: string,
   ): Promise<Task>
   pickTask(taskId: string, donorId?: string): Promise<{ success: boolean; error?: string }>

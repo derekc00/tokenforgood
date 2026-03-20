@@ -104,3 +104,17 @@ export function parseGitHubIssueUrl(url: string): {
     issueNumber: parseInt(match[3], 10),
   }
 }
+
+export function parseGitHubPRUrl(url: string): {
+  owner: string
+  repo: string
+  prNumber: number
+} | null {
+  const match = url.match(/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)/)
+  if (!match) return null
+  return {
+    owner: match[1],
+    repo: match[2],
+    prNumber: parseInt(match[3], 10),
+  }
+}

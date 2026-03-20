@@ -294,22 +294,25 @@ export default async function ProfilePage({
   const { user } = await params
   const service = getDataService()
 
-  const profile = await service.getProfile(user)
+  const [profile, allTasksResult] = await Promise.all([
+    service.getProfile(user),
+    service.getTasks({ page: 1, per_page: 100 }),
+  ])
   if (!profile) notFound()
 
-  // Fetch all tasks to derive contributions and requests
-  const allTasksResult = await service.getTasks({ page: 1, per_page: 100 })
   const allTasks = allTasksResult.data
 
-  // Tasks completed by this user (requester as proxy until auth is wired)
-  const completedTasks = allTasks.filter(
-    (t) =>
-      (t.status === 'completed' || t.status === 'verified') &&
-      t.requester_id === profile.id,
-  )
-
-  // Tasks requested by this user
-  const requestedTasks = allTasks.filter((t) => t.requester_id === profile.id)
+  // Split tasks in a single pass: completed (mock — no donor tracking yet) and requested
+  const completedTasks: Task[] = []
+  const requestedTasks: Task[] = []
+  for (const t of allTasks) {
+    if (t.status === 'completed' || t.status === 'verified') {
+      completedTasks.push(t)
+    }
+    if (t.requester_id === profile.id) {
+      requestedTasks.push(t)
+    }
+  }
 
   // Build synthetic completions to fill up to profile.tasks_completed count
   const completions = buildMockCompletions(profile.id, completedTasks)
