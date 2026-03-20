@@ -190,7 +190,7 @@ export async function fetchPRDiff(
   repo: string,
   prNumber: number,
 ): Promise<{ diff: string; truncated: boolean }> {
-  const headers = { ...getGitHubHeaders(), Accept: 'application/vnd.github.v3.diff' }
+  const headers = { ...getGitHubHeaders(), Accept: 'application/vnd.github.diff' }
 
   const res = await fetch(
     `${GITHUB_API}/repos/${owner}/${repo}/pulls/${prNumber}`,

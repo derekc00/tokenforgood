@@ -52,19 +52,20 @@ export async function GET(
       const availableSections = ['install_deps', 'build', 'run_tests']
 
       try {
-        // Fetch PR data, diff, and changed files concurrently
-        const [ghPR, diffResult, changedFilesResult] = await Promise.all([
-          fetchPR(task.repo_owner, task.repo_name, task.github_pr_number),
-          fetchPRDiff(task.repo_owner, task.repo_name, task.github_pr_number),
-          fetchPRChangedFiles(task.repo_owner, task.repo_name, task.github_pr_number),
-        ])
-
+        // Fetch PR first to confirm it exists (returns null on 404)
+        const ghPR = await fetchPR(task.repo_owner, task.repo_name, task.github_pr_number)
         if (!ghPR) {
           return NextResponse.json(
             { error: `PR #${task.github_pr_number} not found on GitHub` },
             { status: 404 },
           )
         }
+
+        // Now fetch diff and changed files concurrently (safe — PR exists)
+        const [diffResult, changedFilesResult] = await Promise.all([
+          fetchPRDiff(task.repo_owner, task.repo_name, task.github_pr_number),
+          fetchPRChangedFiles(task.repo_owner, task.repo_name, task.github_pr_number),
+        ])
 
         // Map GitHub API shape to domain GitHubPR
         const domainPR: DomainPR = {
@@ -107,10 +108,16 @@ export async function GET(
         })
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error'
-        if (message.includes('403') || message.includes('429')) {
+        if (message.includes('429')) {
           return NextResponse.json(
             { error: 'GitHub API rate limit exceeded. Try again later.' },
             { status: 429 },
+          )
+        }
+        if (message.includes('403')) {
+          return NextResponse.json(
+            { error: 'GitHub API access denied. The token may lack permission for this repository.' },
+            { status: 403 },
           )
         }
         if (message.includes('404')) {
