@@ -84,6 +84,7 @@ function UserSection({ user }: { user: NavUser | null | undefined }) {
     <Button
       variant="ghost"
       size="sm"
+      nativeButton={false}
       render={
         <Link href="/api/auth/github" className="flex items-center gap-1.5">
           <Github className="size-4" />
@@ -134,10 +135,12 @@ export function Nav({ user = null }: NavProps) {
           <Button
             variant="outline"
             size="sm"
+            nativeButton={false}
             render={<Link href="/tasks/request">Request a Task</Link>}
           />
           <Button
             size="sm"
+            nativeButton={false}
             render={<Link href="/tasks/donate">Donate &amp; Run</Link>}
           />
           <ThemeToggle />
@@ -181,6 +184,7 @@ export function Nav({ user = null }: NavProps) {
                   variant="outline"
                   size="sm"
                   className="w-full justify-center"
+                  nativeButton={false}
                   render={
                     <Link
                       href="/tasks/request"
@@ -193,6 +197,7 @@ export function Nav({ user = null }: NavProps) {
                 <Button
                   size="sm"
                   className="w-full justify-center"
+                  nativeButton={false}
                   render={
                     <Link
                       href="/tasks/donate"

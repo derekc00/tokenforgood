@@ -315,7 +315,13 @@ export function RequestTaskModal({
                     className="w-full"
                     aria-invalid={!!errors.template_id}
                   >
-                    <SelectValue placeholder="Select a template" />
+                    <SelectValue placeholder="Select a template">
+                      {(value: string | null) => {
+                        if (!value) return null
+                        const tpl = templates.find((t) => t.id === value)
+                        return tpl?.name ?? value
+                      }}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {(Object.entries(templatesByCategory) as Array<
