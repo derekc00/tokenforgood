@@ -2,6 +2,7 @@ import {
   fetchTask,
   claimTask,
   startHeartbeat,
+  API_BASE,
   type TaskResponse,
 } from '../services/api.js'
 
@@ -19,7 +20,7 @@ interface SandboxHandle {
   mode: 'safe' | 'full'
 }
 
-function parseOptions(args: string[]): { taskIds: string[]; options: RunOptions } {
+export function parseOptions(args: string[]): { taskIds: string[]; options: RunOptions } {
   const taskIds: string[] = []
   const options: RunOptions = {
     noContainer: false,
@@ -101,7 +102,7 @@ async function runSingleTask(taskId: string, options: RunOptions): Promise<void>
     const prUrl = await openDraftPR(task, sandbox)
 
     console.log(`[tokenforgood] Done! Draft PR: ${prUrl}`)
-    console.log(`[tokenforgood] Mark this task complete at: https://tokenforgood.dev/tasks/${taskId}`)
+    console.log(`[tokenforgood] Mark this task complete at: ${API_BASE}/tasks/${taskId}`)
   } finally {
     clearInterval(heartbeatInterval)
     console.log('[tokenforgood] Heartbeat stopped')

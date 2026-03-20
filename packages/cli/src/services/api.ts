@@ -1,4 +1,4 @@
-const API_BASE = process.env.TOKENFORGOOD_API_URL ?? 'https://tokenforgood.dev'
+export const API_BASE = process.env.TOKENFORGOOD_API_URL ?? 'https://tokenforgood.dev'
 
 export async function fetchTask(taskId: string): Promise<TaskResponse> {
   const response = await fetch(`${API_BASE}/api/tasks/${taskId}`)

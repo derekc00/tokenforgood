@@ -1,5 +1,6 @@
 import { makeBadge } from 'badge-maker'
 import { CopyBadgeButton } from '@/app/profile/[user]/copy-badge-button'
+import { APP_URL } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // BadgePreview — server component
@@ -39,7 +40,7 @@ export function BadgePreview({ username, tasksCompleted }: BadgePreviewProps) {
     style: 'flat',
   })
 
-  const badgeMarkdown = `[![TokenForGood](https://tokenforgood.dev/api/badge/@${safeUsername})](https://tokenforgood.dev/profile/@${safeUsername})`
+  const badgeMarkdown = `[![TokenForGood](${APP_URL}/api/badge/@${safeUsername})](${APP_URL}/profile/@${safeUsername})`
 
   return (
     <div className="rounded-xl border border-border bg-muted/30 p-6">
