@@ -12,5 +12,3 @@ export {
   getTestCommand,
   getLintCommand,
 } from '@/lib/prompt/prompt-builder'
-
-export { generateCLICommand, generateSingleTaskCommand } from '@/lib/prompt/cli-command'

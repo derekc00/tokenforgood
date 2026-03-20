@@ -6,7 +6,6 @@ import type {
   ActivityFeedItem,
   PlatformStats,
   GeneratedPrompt,
-  ProviderPricing,
   AIProvider,
   AIModel,
   TaskType,
@@ -26,7 +25,6 @@ import rawProfiles from '@/lib/mock-data/profiles.json'
 import rawTemplates from '@/lib/mock-data/templates.json'
 import rawActivity from '@/lib/mock-data/activity.json'
 import rawStats from '@/lib/mock-data/stats.json'
-import rawPricing from '@/lib/mock-data/provider-pricing.json'
 
 // ---------------------------------------------------------------------------
 // Internal raw JSON types (match the shape stored in the JSON files)
@@ -99,33 +97,6 @@ interface RawActivityItem {
   action: string
   pr_url: string | null
   created_at: string
-}
-
-interface RawModel {
-  id: string
-  name: string
-  display_name: string
-  description?: string
-  input_cost_per_mtok?: number
-  output_cost_per_mtok?: number
-  flat_rate_estimate_per_task_usd?: Record<string, number>
-  context_window_k?: number
-  monthly_usage_limit_note?: string
-  recommended_for?: string[]
-}
-
-interface RawProvider {
-  id: string
-  name: string
-  description: string
-  billing_model: string
-  models: RawModel[]
-  flat_rate_note?: string
-}
-
-interface RawPricing {
-  providers: RawProvider[]
-  task_size_definitions: Record<string, string>
 }
 
 interface RawTopDonorProfile {
@@ -234,23 +205,6 @@ function buildRepoProfile(task: Task): RepoProfile {
   }
 }
 
-/** Generates a cryptographically-adequate random hex string for claim tokens. */
-function generateToken(): string {
-  const bytes = new Uint8Array(16)
-  // Works in both Node 20+ and browser environments
-  if (typeof globalThis.crypto !== 'undefined') {
-    globalThis.crypto.getRandomValues(bytes)
-  } else {
-    // Fallback for older Node without globalThis.crypto
-    for (let i = 0; i < bytes.length; i++) {
-      bytes[i] = Math.floor(Math.random() * 256)
-    }
-  }
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-}
-
 /** Generates a UUID v4 string. */
 function generateUuid(): string {
   const bytes = new Uint8Array(16)
@@ -298,75 +252,6 @@ function matchesTokenFilter(
   }
 }
 
-/** Flattens the nested provider-pricing JSON into a ProviderPricing[] array. */
-function flattenPricing(raw: RawPricing): ProviderPricing[] {
-  const result: ProviderPricing[] = []
-  for (const provider of raw.providers) {
-    const providerKey = normaliseProvider(provider.id) as AIProvider
-    const isFlat = provider.billing_model === 'flat_rate_estimate'
-
-    for (const model of provider.models) {
-      const flatRates: Partial<Record<TaskType, number>> | null = isFlat
-        ? buildFlatRatesFromTaskTypes(model)
-        : null
-
-      result.push({
-        provider: providerKey,
-        model: model.id as AIModel,
-        display_name: model.display_name,
-        input_cost_per_mtok: model.input_cost_per_mtok ?? 0,
-        output_cost_per_mtok: model.output_cost_per_mtok ?? 0,
-        is_flat_rate: isFlat,
-        flat_rate_estimate_per_task: flatRates,
-        notes: model.description ?? provider.description,
-      })
-    }
-  }
-  return result
-}
-
-/**
- * For flat-rate providers the JSON stores estimates keyed by 'light/medium/heavy'.
- * The domain type uses TaskType keys, so we map each recommended task type to
- * the appropriate tier estimate.
- */
-function buildFlatRatesFromTaskTypes(
-  model: RawModel,
-): Partial<Record<TaskType, number>> | null {
-  if (!model.flat_rate_estimate_per_task_usd || !model.recommended_for?.length) {
-    return null
-  }
-  const rates = model.flat_rate_estimate_per_task_usd
-  const perTask: Partial<Record<TaskType, number>> = {}
-
-  // Task-type → cost tier mapping based on typical token usage
-  const tierMap: Record<string, 'light' | 'medium' | 'heavy'> = {
-    'add-documentation': 'light',
-    'dependency-audit': 'light',
-    'setup-cicd': 'light',
-    'write-tests': 'medium',
-    'implement-feature': 'medium',
-    'add-types': 'medium',
-    'code-quality-review': 'medium',
-    'accessibility-audit': 'medium',
-    'migrate-framework': 'medium',
-    'security-audit': 'heavy',
-    'architecture-review': 'heavy',
-    'performance-analysis': 'heavy',
-  }
-
-  for (const taskTypeStr of model.recommended_for) {
-    const taskType = taskTypeStr as TaskType
-    const tier = tierMap[taskType] ?? 'medium'
-    const cost = rates[tier]
-    if (cost !== undefined) {
-      perTask[taskType] = cost
-    }
-  }
-
-  return Object.keys(perTask).length > 0 ? perTask : null
-}
-
 // ---------------------------------------------------------------------------
 // Store — internal mutable state for the mock service
 // ---------------------------------------------------------------------------
@@ -380,7 +265,6 @@ interface MockStore {
   completions: Map<string, TaskCompletion> // keyed by completion id
   activity: ActivityFeedItem[]
   stats: PlatformStats
-  pricing: ProviderPricing[]
 }
 
 // ---------------------------------------------------------------------------
@@ -524,9 +408,6 @@ export class MockDataService implements DataService {
       }),
     }
 
-    // Pricing
-    const pricing = flattenPricing(rawPricing as RawPricing)
-
     return {
       tasks,
       profiles,
@@ -536,7 +417,6 @@ export class MockDataService implements DataService {
       completions: new Map(),
       activity,
       stats,
-      pricing,
     }
   }
 
@@ -801,12 +681,6 @@ export class MockDataService implements DataService {
 
   async getActivityFeed(limit = 20): Promise<ActivityFeedItem[]> {
     return this.store.activity.slice(0, limit)
-  }
-
-  // ---------- Pricing ----------
-
-  async getProviderPricing(): Promise<ProviderPricing[]> {
-    return this.store.pricing
   }
 
   // ---------- Prompt ----------

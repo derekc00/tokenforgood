@@ -6,7 +6,6 @@ import type {
   ActivityFeedItem,
   PlatformStats,
   GeneratedPrompt,
-  ProviderPricing,
 } from '@/lib/types'
 import type { CompleteTaskInput, CreateTaskInput, TaskFilterInput } from '@/lib/schemas'
 
@@ -61,9 +60,6 @@ export interface DataService {
   // Stats & Feed
   getPlatformStats(): Promise<PlatformStats>
   getActivityFeed(limit?: number): Promise<ActivityFeedItem[]>
-
-  // Pricing
-  getProviderPricing(): Promise<ProviderPricing[]>
 
   // Prompt
   getGeneratedPrompt(taskId: string): Promise<GeneratedPrompt | null>
