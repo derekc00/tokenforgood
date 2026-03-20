@@ -21,6 +21,7 @@ import {
 import type {
   DataService,
   PaginatedResult,
+  PaginationParams,
   ClaimResult,
   CompleteResult,
 } from './data-service'
@@ -634,6 +635,54 @@ export class MockDataService implements DataService {
 
   async getTask(id: string): Promise<Task | null> {
     return this.store.tasks.get(id) ?? null
+  }
+
+  async getTasksByDonor(
+    userId: string,
+    params?: PaginationParams,
+  ): Promise<PaginatedResult<Task>> {
+    const page = params?.page ?? 1
+    const perPage = params?.per_page ?? 20
+
+    const results = Array.from(this.store.tasks.values()).filter(
+      (t) => t.claimed_by === userId && t.status === 'completed',
+    )
+
+    // Sort newest completion first
+    results.sort(
+      (a, b) =>
+        new Date(b.completed_at ?? b.updated_at).getTime() -
+        new Date(a.completed_at ?? a.updated_at).getTime(),
+    )
+
+    const total = results.length
+    const offset = (page - 1) * perPage
+    const data = results.slice(offset, offset + perPage)
+
+    return { data, total, page, per_page: perPage, has_more: offset + data.length < total }
+  }
+
+  async getTasksByRequester(
+    userId: string,
+    params?: PaginationParams,
+  ): Promise<PaginatedResult<Task>> {
+    const page = params?.page ?? 1
+    const perPage = params?.per_page ?? 20
+
+    const results = Array.from(this.store.tasks.values()).filter(
+      (t) => t.requester_id === userId,
+    )
+
+    // Sort newest first
+    results.sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )
+
+    const total = results.length
+    const offset = (page - 1) * perPage
+    const data = results.slice(offset, offset + perPage)
+
+    return { data, total, page, per_page: perPage, has_more: offset + data.length < total }
   }
 
   async createTask(

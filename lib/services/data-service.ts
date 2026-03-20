@@ -11,8 +11,14 @@ import type {
 import type { CompleteTaskInput, TaskFilterInput } from '@/lib/schemas'
 
 // ---------------------------------------------------------------------------
-// Shared result shapes
+// Shared param / result shapes
 // ---------------------------------------------------------------------------
+
+/** Subset of TaskFilterInput used when a query is already scoped by user. */
+export interface PaginationParams {
+  page?: number
+  per_page?: number
+}
 
 export interface PaginatedResult<T> {
   data: T[]
@@ -43,6 +49,10 @@ export interface DataService {
   // Tasks
   getTasks(filters?: TaskFilterInput): Promise<PaginatedResult<Task>>
   getTask(id: string): Promise<Task | null>
+  /** Returns tasks where `claimed_by === userId` and `status === 'completed'`. */
+  getTasksByDonor(userId: string, params?: PaginationParams): Promise<PaginatedResult<Task>>
+  /** Returns tasks where `requester_id === userId`. */
+  getTasksByRequester(userId: string, params?: PaginationParams): Promise<PaginatedResult<Task>>
   createTask(
     data: { github_issue_url: string; template_id: string },
     userId: string,
