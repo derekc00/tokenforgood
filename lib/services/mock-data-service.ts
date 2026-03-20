@@ -13,6 +13,12 @@ import type {
   RepoProfile,
 } from '@/lib/types'
 import type { CompleteTaskInput, TaskFilterInput } from '@/lib/schemas'
+import {
+  AIProviderSchema,
+  AIModelSchema,
+  TaskTypeSchema,
+  TaskStatusSchema,
+} from '@/lib/schemas'
 import type {
   DataService,
   PaginatedResult,
@@ -212,8 +218,7 @@ const KNOWN_ACTIVITY_ACTIONS: readonly ActivityFeedItem['action'][] = ['complete
 /** Normalises provider strings from JSON (underscores) to the AIProvider union (hyphens). */
 function normaliseProvider(raw: string | null): AIProvider | null {
   if (!raw) return null
-  const normalised = raw.replace(/_/g, '-')
-  return includes(KNOWN_PROVIDERS, normalised) ? normalised : null
+  return AIProviderSchema.parse(raw.replace(/_/g, '-'))
 }
 
 /** Coerces a raw profile from JSON to the typed Profile shape. */
@@ -244,10 +249,10 @@ function coerceTask(raw: RawTask): Task {
     repo_profile: null,
     template_id: raw.template_id,
     template: null,
-    task_type: includes(KNOWN_TASK_TYPES, raw.task_type) ? raw.task_type : 'write-tests',
+    task_type: TaskTypeSchema.parse(raw.task_type),
     requester_id: raw.requester_id,
     requester: null,
-    status: includes(KNOWN_TASK_STATUSES, raw.status) ? raw.status : 'open',
+    status: TaskStatusSchema.parse(raw.status),
     claimed_by: raw.claimed_by,
     claimed_at: raw.claimed_at,
     last_heartbeat_at: raw.last_heartbeat_at,
@@ -356,8 +361,8 @@ function matchesTokenFilter(
 function flattenPricing(raw: RawPricing): ProviderPricing[] {
   const result: ProviderPricing[] = []
   for (const provider of raw.providers) {
-    const providerKey = normaliseProvider(provider.id)
-    if (providerKey === null) continue
+    // provider.id is always a non-null string in the JSON
+    const providerKey = AIProviderSchema.parse(provider.id.replace(/_/g, '-'))
     const isFlat = provider.billing_model === 'flat_rate_estimate'
 
     for (const model of provider.models) {
@@ -368,7 +373,7 @@ function flattenPricing(raw: RawPricing): ProviderPricing[] {
 
       result.push({
         provider: providerKey,
-        model: model.id,
+        model: AIModelSchema.parse(model.id),
         display_name: model.display_name,
         input_cost_per_mtok: model.input_cost_per_mtok ?? 0,
         output_cost_per_mtok: model.output_cost_per_mtok ?? 0,
