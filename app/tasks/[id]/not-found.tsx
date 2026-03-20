@@ -1,7 +1,5 @@
 import Link from 'next/link'
 import { FileQuestion, ArrowLeft } from 'lucide-react'
-import { buttonVariants } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 
 export default function TaskNotFound() {
   return (
@@ -20,7 +18,10 @@ export default function TaskNotFound() {
         </p>
       </div>
 
-      <Link href="/tasks" className={cn(buttonVariants({ variant: 'default' }))}>
+      <Link
+        href="/"
+        className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs hover:bg-primary/90 transition-all"
+      >
         <ArrowLeft className="mr-2 size-4" />
         Back to task board
       </Link>

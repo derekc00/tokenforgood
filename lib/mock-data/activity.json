@@ -1,0 +1,502 @@
+[
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5001",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4001",
+      "github_username": "sarah-chen",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/1823456",
+      "display_name": "Sarah Chen",
+      "merge_rate": 0.92,
+      "tasks_completed": 47
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1018",
+      "github_issue_title": "Write tests for HMR module graph invalidation logic",
+      "repo_full_name": "vitejs/vite",
+      "task_type": "write-tests"
+    },
+    "action": "completed",
+    "pr_url": "https://github.com/vitejs/vite/pull/16588",
+    "created_at": "2026-03-19T09:12:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5002",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4003",
+      "github_username": "tj-devs",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/5672310",
+      "display_name": "TJ Rivera",
+      "merge_rate": 0.95,
+      "tasks_completed": 51
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1016",
+      "github_issue_title": "Code quality review of query builder internals",
+      "repo_full_name": "prisma/prisma",
+      "task_type": "code-quality-review"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-19T09:10:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5003",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4007",
+      "github_username": "bytecruncher",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/4123987",
+      "display_name": "Sam Okafor",
+      "merge_rate": 0.60,
+      "tasks_completed": 5
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1014",
+      "github_issue_title": "Dependency audit requested before v5.0 release",
+      "repo_full_name": "sindresorhus/type-fest",
+      "task_type": "dependency-audit"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-19T07:45:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5004",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4004",
+      "github_username": "rust-fan-42",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/9081234",
+      "display_name": "Jordan Blake",
+      "merge_rate": 0.82,
+      "tasks_completed": 22
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1013",
+      "github_issue_title": "Write tests for new App Router middleware pipeline",
+      "repo_full_name": "vercel/next.js",
+      "task_type": "write-tests"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-19T06:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5005",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4002",
+      "github_username": "mkolodny",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/2934871",
+      "display_name": "Max Kolodny",
+      "merge_rate": 0.87,
+      "tasks_completed": 38
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1017",
+      "github_issue_title": "Add TypeScript types to JIT engine utility functions",
+      "repo_full_name": "tailwindlabs/tailwindcss",
+      "task_type": "add-types"
+    },
+    "action": "completed",
+    "pr_url": "https://github.com/tailwindlabs/tailwindcss/pull/13251",
+    "created_at": "2026-03-19T02:30:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5006",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4005",
+      "github_username": "webwizard",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/3345678",
+      "display_name": "Priya Nair",
+      "merge_rate": 0.80,
+      "tasks_completed": 15
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1019",
+      "github_issue_title": "Accessibility audit: Dialog and Sheet components fail WCAG focus trap requirements",
+      "repo_full_name": "shadcn-ui/ui",
+      "task_type": "accessibility-audit"
+    },
+    "action": "completed",
+    "pr_url": null,
+    "created_at": "2026-03-18T23:45:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5007",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4001",
+      "github_username": "sarah-chen",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/1823456",
+      "display_name": "Sarah Chen",
+      "merge_rate": 0.92,
+      "tasks_completed": 47
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1015",
+      "github_issue_title": "Generate API docs for all public router procedures",
+      "repo_full_name": "trpc/trpc",
+      "task_type": "add-documentation"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-18T20:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5008",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4002",
+      "github_username": "mkolodny",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/2934871",
+      "display_name": "Max Kolodny",
+      "merge_rate": 0.87,
+      "tasks_completed": 38
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1012",
+      "github_issue_title": "Performance analysis: dashboard query is taking 4s on large datasets",
+      "repo_full_name": "supabase/supabase",
+      "task_type": "performance-analysis"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-18T15:30:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5009",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4003",
+      "github_username": "tj-devs",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/5672310",
+      "display_name": "TJ Rivera",
+      "merge_rate": 0.95,
+      "tasks_completed": 51
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1003",
+      "github_issue_title": "Security: user input not sanitized in search handler",
+      "repo_full_name": "trpc/trpc",
+      "task_type": "security-audit"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-18T14:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5010",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4008",
+      "github_username": "devnomad99",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/8876543",
+      "display_name": "Lee Tanaka",
+      "merge_rate": 0.75,
+      "tasks_completed": 12
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1008",
+      "github_issue_title": "Add TypeScript types to legacy JS utility modules",
+      "repo_full_name": "biomejs/biome",
+      "task_type": "add-types"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-18T12:20:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5011",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4004",
+      "github_username": "rust-fan-42",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/9081234",
+      "display_name": "Jordan Blake",
+      "merge_rate": 0.82,
+      "tasks_completed": 22
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1007",
+      "github_issue_title": "Dependency audit: several packages outdated and two with known CVEs",
+      "repo_full_name": "vitejs/vite",
+      "task_type": "dependency-audit"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-18T10:45:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5012",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4001",
+      "github_username": "sarah-chen",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/1823456",
+      "display_name": "Sarah Chen",
+      "merge_rate": 0.92,
+      "tasks_completed": 47
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1001",
+      "github_issue_title": "Auth module has no test coverage",
+      "repo_full_name": "vercel/next.js",
+      "task_type": "write-tests"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-18T09:30:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5013",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4006",
+      "github_username": "alice-codes",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/7654321",
+      "display_name": "Alice Moreau",
+      "merge_rate": 0.78,
+      "tasks_completed": 9
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1009",
+      "github_issue_title": "Code quality review: got-core hook system is hard to follow",
+      "repo_full_name": "sindresorhus/got",
+      "task_type": "code-quality-review"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-18T08:15:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5014",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4005",
+      "github_username": "webwizard",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/3345678",
+      "display_name": "Priya Nair",
+      "merge_rate": 0.80,
+      "tasks_completed": 15
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1011",
+      "github_issue_title": "Accessibility audit: REPL UI has no keyboard navigation support",
+      "repo_full_name": "tidalcycles/strudel",
+      "task_type": "accessibility-audit"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-18T06:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5015",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4003",
+      "github_username": "tj-devs",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/5672310",
+      "display_name": "TJ Rivera",
+      "merge_rate": 0.95,
+      "tasks_completed": 51
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1005",
+      "github_issue_title": "Architecture review needed for realtime subscription scaling",
+      "repo_full_name": "supabase/supabase",
+      "task_type": "architecture-review"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-18T05:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5016",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4002",
+      "github_username": "mkolodny",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/2934871",
+      "display_name": "Max Kolodny",
+      "merge_rate": 0.87,
+      "tasks_completed": 38
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1006",
+      "github_issue_title": "Migrate test suite from Jest to Vitest",
+      "repo_full_name": "prisma/prisma",
+      "task_type": "migrate-framework"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-17T22:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5017",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4001",
+      "github_username": "sarah-chen",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/1823456",
+      "display_name": "Sarah Chen",
+      "merge_rate": 0.92,
+      "tasks_completed": 47
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1018",
+      "github_issue_title": "Write tests for HMR module graph invalidation logic",
+      "repo_full_name": "vitejs/vite",
+      "task_type": "write-tests"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-17T18:30:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5018",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4004",
+      "github_username": "rust-fan-42",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/9081234",
+      "display_name": "Jordan Blake",
+      "merge_rate": 0.82,
+      "tasks_completed": 22
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1004",
+      "github_issue_title": "CI pipeline is slow and lacks caching — builds take 12+ minutes",
+      "repo_full_name": "tailwindlabs/tailwindcss",
+      "task_type": "setup-cicd"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-17T16:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5019",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4003",
+      "github_username": "tj-devs",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/5672310",
+      "display_name": "TJ Rivera",
+      "merge_rate": 0.95,
+      "tasks_completed": 51
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1016",
+      "github_issue_title": "Code quality review of query builder internals",
+      "repo_full_name": "prisma/prisma",
+      "task_type": "code-quality-review"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-17T14:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5020",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4008",
+      "github_username": "devnomad99",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/8876543",
+      "display_name": "Lee Tanaka",
+      "merge_rate": 0.75,
+      "tasks_completed": 12
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1010",
+      "github_issue_title": "Implement custom error map feature from RFC",
+      "repo_full_name": "colinhacks/zod",
+      "task_type": "implement-feature"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-17T11:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5021",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4005",
+      "github_username": "webwizard",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/3345678",
+      "display_name": "Priya Nair",
+      "merge_rate": 0.80,
+      "tasks_completed": 15
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1019",
+      "github_issue_title": "Accessibility audit: Dialog and Sheet components fail WCAG focus trap requirements",
+      "repo_full_name": "shadcn-ui/ui",
+      "task_type": "accessibility-audit"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-17T09:30:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5022",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4002",
+      "github_username": "mkolodny",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/2934871",
+      "display_name": "Max Kolodny",
+      "merge_rate": 0.87,
+      "tasks_completed": 38
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1017",
+      "github_issue_title": "Add TypeScript types to JIT engine utility functions",
+      "repo_full_name": "tailwindlabs/tailwindcss",
+      "task_type": "add-types"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-17T08:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5023",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4006",
+      "github_username": "alice-codes",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/7654321",
+      "display_name": "Alice Moreau",
+      "merge_rate": 0.78,
+      "tasks_completed": 9
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1015",
+      "github_issue_title": "Generate API docs for all public router procedures",
+      "repo_full_name": "trpc/trpc",
+      "task_type": "add-documentation"
+    },
+    "action": "claimed",
+    "pr_url": null,
+    "created_at": "2026-03-17T06:30:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5024",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4001",
+      "github_username": "sarah-chen",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/1823456",
+      "display_name": "Sarah Chen",
+      "merge_rate": 0.92,
+      "tasks_completed": 47
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1017",
+      "github_issue_title": "Add TypeScript types to JIT engine utility functions",
+      "repo_full_name": "tailwindlabs/tailwindcss",
+      "task_type": "add-types"
+    },
+    "action": "completed",
+    "pr_url": "https://github.com/tailwindlabs/tailwindcss/pull/13251",
+    "created_at": "2026-03-17T05:00:00.000Z"
+  },
+  {
+    "id": "d1e2f3a4-b5c6-7d8e-9f0a-1b2c3d4e5025",
+    "donor": {
+      "id": "b9f1a2e3-4c5d-6e7f-8a9b-0c1d2e3f4003",
+      "github_username": "tj-devs",
+      "github_avatar_url": "https://avatars.githubusercontent.com/u/5672310",
+      "display_name": "TJ Rivera",
+      "merge_rate": 0.95,
+      "tasks_completed": 51
+    },
+    "task": {
+      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7a8b9c0d1019",
+      "github_issue_title": "Accessibility audit: Dialog and Sheet components fail WCAG focus trap requirements",
+      "repo_full_name": "shadcn-ui/ui",
+      "task_type": "accessibility-audit"
+    },
+    "action": "completed",
+    "pr_url": null,
+    "created_at": "2026-03-17T03:15:00.000Z"
+  }
+]
