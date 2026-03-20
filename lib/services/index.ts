@@ -1,7 +1,6 @@
 export type {
   DataService,
   PaginatedResult,
-  ClaimResult,
   CompleteResult,
 } from './data-service'
 export { createMockDataService } from './mock-data-service'

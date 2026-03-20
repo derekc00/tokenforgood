@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const service = getDataService()
     const task = await service.createTask(
       {
-        github_issue_url: parsed.data.github_issue_url,
+        github_issue_url: parsed.data.github_issue_url ?? '',
         template_id: parsed.data.template_id,
       },
       userId,

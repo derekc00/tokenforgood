@@ -196,13 +196,10 @@ function RequestedTaskRow({ task }: { task: Task }) {
 
   const statusColors: Record<string, string> = {
     open: 'text-blue-600 dark:text-blue-400',
-    claimed: 'text-yellow-600 dark:text-yellow-400',
+    picked: 'text-yellow-600 dark:text-yellow-400',
     in_progress: 'text-orange-600 dark:text-orange-400',
     completed: 'text-green-600 dark:text-green-400',
-    failed: 'text-red-600 dark:text-red-400',
-    stalled: 'text-muted-foreground',
-    expired: 'text-muted-foreground',
-    stale: 'text-muted-foreground',
+    verified: 'text-green-700 dark:text-green-300',
   }
 
   return (
@@ -304,9 +301,9 @@ export default async function ProfilePage({
   const allTasksResult = await service.getTasks({ page: 1, per_page: 100 })
   const allTasks = allTasksResult.data
 
-  // Tasks completed by this user (claimed_by + status=completed)
+  // Tasks completed (status=completed or verified)
   const completedTasks = allTasks.filter(
-    (t) => t.claimed_by === profile.id && t.status === 'completed',
+    (t) => t.status === 'completed' || t.status === 'verified',
   )
 
   // Tasks requested by this user

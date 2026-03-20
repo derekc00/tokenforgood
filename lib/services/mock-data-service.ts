@@ -16,7 +16,6 @@ import type { CompleteTaskInput, TaskFilterInput } from '@/lib/schemas'
 import type {
   DataService,
   PaginatedResult,
-  ClaimResult,
   CompleteResult,
 } from './data-service'
 
@@ -51,10 +50,13 @@ interface RawProfile {
 
 interface RawTask {
   id: string
+  source_type?: string
   github_issue_url: string
   github_issue_number: number
   github_issue_title: string
   github_issue_body_sanitized: string
+  github_pr_url?: string | null
+  github_pr_number?: number | null
   repo_owner: string
   repo_name: string
   repo_full_name: string
@@ -62,9 +64,7 @@ interface RawTask {
   template_id: string
   requester_id: string
   status: string
-  claimed_by: string | null
-  claimed_at: string | null
-  last_heartbeat_at: string | null
+  pick_count?: number
   completed_at: string | null
   pr_url: string | null
   pr_number: number | null
@@ -178,10 +178,13 @@ function coerceProfile(raw: RawProfile): Profile {
 function coerceTask(raw: RawTask): Task {
   return {
     id: raw.id,
+    source_type: (raw.source_type as Task['source_type']) ?? 'issue',
     github_issue_url: raw.github_issue_url,
     github_issue_number: raw.github_issue_number,
     github_issue_title: raw.github_issue_title,
     github_issue_body_sanitized: raw.github_issue_body_sanitized,
+    github_pr_url: raw.github_pr_url ?? null,
+    github_pr_number: raw.github_pr_number ?? null,
     repo_owner: raw.repo_owner,
     repo_name: raw.repo_name,
     repo_full_name: raw.repo_full_name,
@@ -192,9 +195,7 @@ function coerceTask(raw: RawTask): Task {
     requester_id: raw.requester_id,
     requester: null,
     status: raw.status as Task['status'],
-    claimed_by: raw.claimed_by,
-    claimed_at: raw.claimed_at,
-    last_heartbeat_at: raw.last_heartbeat_at,
+    pick_count: raw.pick_count ?? 0,
     completed_at: raw.completed_at,
     pr_url: raw.pr_url,
     pr_number: raw.pr_number,
@@ -369,11 +370,6 @@ function buildFlatRatesFromTaskTypes(
 // Store — internal mutable state for the mock service
 // ---------------------------------------------------------------------------
 
-interface ClaimRecord {
-  token: string
-  userId: string
-}
-
 interface MockStore {
   tasks: Map<string, Task>
   profiles: Map<string, Profile>           // keyed by id
@@ -384,7 +380,6 @@ interface MockStore {
   activity: ActivityFeedItem[]
   stats: PlatformStats
   pricing: ProviderPricing[]
-  claims: Map<string, ClaimRecord>         // taskId → { token, userId }
 }
 
 // ---------------------------------------------------------------------------
@@ -455,10 +450,13 @@ export class MockDataService implements DataService {
         // Construct a minimal Task if the full one is not in the map
         const task: Task = fullTask ?? {
           id: item.task.id,
+          source_type: 'issue',
           github_issue_url: '',
           github_issue_number: 0,
           github_issue_title: item.task.github_issue_title,
           github_issue_body_sanitized: '',
+          github_pr_url: null,
+          github_pr_number: null,
           repo_owner: item.task.repo_full_name.split('/')[0] ?? '',
           repo_name: item.task.repo_full_name.split('/')[1] ?? '',
           repo_full_name: item.task.repo_full_name,
@@ -469,9 +467,7 @@ export class MockDataService implements DataService {
           requester_id: '',
           requester: null,
           status: 'open',
-          claimed_by: null,
-          claimed_at: null,
-          last_heartbeat_at: null,
+          pick_count: 0,
           completed_at: null,
           pr_url: null,
           pr_number: null,
@@ -537,7 +533,6 @@ export class MockDataService implements DataService {
       activity,
       stats,
       pricing,
-      claims: new Map(),
     }
   }
 
@@ -557,6 +552,11 @@ export class MockDataService implements DataService {
     // Filter by task_type
     if (filters?.task_type) {
       results = results.filter((t) => t.task_type === filters.task_type)
+    }
+
+    // Filter by source_type
+    if (filters?.source_type) {
+      results = results.filter((t) => t.source_type === filters.source_type)
     }
 
     // Filter by token_estimate bucket
@@ -608,10 +608,13 @@ export class MockDataService implements DataService {
 
     const task: Task = {
       id,
+      source_type: 'issue',
       github_issue_url: data.github_issue_url,
       github_issue_number: issueNumber,
       github_issue_title: `Issue #${issueNumber} from ${repoOwner}/${repoName}`,
       github_issue_body_sanitized: '',
+      github_pr_url: null,
+      github_pr_number: null,
       repo_owner: repoOwner,
       repo_name: repoName,
       repo_full_name: `${repoOwner}/${repoName}`,
@@ -622,9 +625,7 @@ export class MockDataService implements DataService {
       requester_id: userId,
       requester,
       status: 'open',
-      claimed_by: null,
-      claimed_at: null,
-      last_heartbeat_at: null,
+      pick_count: 0,
       completed_at: null,
       pr_url: null,
       pr_number: null,
@@ -640,58 +641,49 @@ export class MockDataService implements DataService {
     return task
   }
 
-  async claimTask(taskId: string, userId: string): Promise<ClaimResult> {
-    const task = this.store.tasks.get(taskId)
-    if (!task) {
-      return { success: false, error: 'Task not found' }
-    }
-    if (task.status !== 'open') {
-      return { success: false, error: `Task is not open (current status: ${task.status})` }
-    }
-
-    const claimToken = generateToken()
-    const now = new Date().toISOString()
-
-    const updated: Task = {
-      ...task,
-      status: 'claimed',
-      claimed_by: userId,
-      claimed_at: now,
-      updated_at: now,
-    }
-    this.store.tasks.set(taskId, updated)
-    this.store.claims.set(taskId, { token: claimToken, userId })
-
-    return { success: true, task: updated, claim_token: claimToken }
-  }
-
-  async unclaimTask(
+  async pickTask(
     taskId: string,
-    userId: string,
+    _donorId?: string,
   ): Promise<{ success: boolean; error?: string }> {
     const task = this.store.tasks.get(taskId)
     if (!task) {
       return { success: false, error: 'Task not found' }
     }
-    if (task.claimed_by !== userId) {
-      return { success: false, error: 'You do not hold this claim' }
-    }
-    if (task.status !== 'claimed' && task.status !== 'in_progress') {
-      return { success: false, error: 'Task is not in a claimable state' }
-    }
 
     const now = new Date().toISOString()
+    const newStatus: Task['status'] =
+      task.status === 'open' ? 'picked' : task.status
+
     this.store.tasks.set(taskId, {
       ...task,
-      status: 'open',
-      claimed_by: null,
-      claimed_at: null,
-      last_heartbeat_at: null,
+      status: newStatus,
+      pick_count: task.pick_count + 1,
       updated_at: now,
     })
-    this.store.claims.delete(taskId)
 
     return { success: true }
+  }
+
+  async expirePickedTasks(maxAgeHours = 24): Promise<number> {
+    const cutoff = Date.now() - maxAgeHours * 60 * 60 * 1000
+    let expired = 0
+
+    for (const [id, task] of this.store.tasks) {
+      if (
+        task.status === 'picked' &&
+        new Date(task.updated_at).getTime() < cutoff
+      ) {
+        this.store.tasks.set(id, {
+          ...task,
+          status: 'open',
+          pick_count: 0,
+          updated_at: new Date().toISOString(),
+        })
+        expired++
+      }
+    }
+
+    return expired
   }
 
   async completeTask(
@@ -703,11 +695,8 @@ export class MockDataService implements DataService {
     if (!task) {
       return { success: false, error: 'Task not found' }
     }
-    if (task.claimed_by !== userId) {
-      return { success: false, error: 'You do not hold this claim' }
-    }
-    if (task.status !== 'claimed' && task.status !== 'in_progress') {
-      return { success: false, error: 'Task must be claimed or in_progress to complete' }
+    if (task.status !== 'picked' && task.status !== 'in_progress') {
+      return { success: false, error: 'Task must be picked or in_progress to complete' }
     }
 
     const now = new Date().toISOString()
@@ -718,7 +707,6 @@ export class MockDataService implements DataService {
     // Estimate cost from token counts if provided
     let estimatedCost: number | null = null
     if (data.input_tokens !== undefined && data.output_tokens !== undefined) {
-      // Simple estimate: assume Sonnet pricing as a fallback
       const inputMtok = data.input_tokens / 1_000_000
       const outputMtok = data.output_tokens / 1_000_000
       estimatedCost = inputMtok * 3.0 + outputMtok * 15.0
@@ -755,37 +743,8 @@ export class MockDataService implements DataService {
       updated_at: now,
     }
     this.store.tasks.set(taskId, updatedTask)
-    this.store.claims.delete(taskId)
 
     return { success: true, completion: { ...completion, task: updatedTask } }
-  }
-
-  async heartbeat(
-    taskId: string,
-    claimToken: string,
-  ): Promise<{ success: boolean; error?: string }> {
-    const task = this.store.tasks.get(taskId)
-    if (!task) {
-      return { success: false, error: 'Task not found' }
-    }
-
-    const claim = this.store.claims.get(taskId)
-    if (!claim || claim.token !== claimToken) {
-      return { success: false, error: 'Invalid claim token' }
-    }
-
-    const now = new Date().toISOString()
-    // Transition claimed → in_progress on the first heartbeat
-    const newStatus = task.status === 'claimed' ? 'in_progress' : task.status
-
-    this.store.tasks.set(taskId, {
-      ...task,
-      status: newStatus,
-      last_heartbeat_at: now,
-      updated_at: now,
-    })
-
-    return { success: true }
   }
 
   // ---------- Templates ----------

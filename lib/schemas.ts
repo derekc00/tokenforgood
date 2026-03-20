@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { AIProvider, AIModel, TaskStatus, TaskType } from '@/lib/types'
+import type { AIProvider, AIModel, TaskStatus, TaskType, SourceType } from '@/lib/types'
 
 // ---------------------------------------------------------------------------
 // Reusable primitive schemas
@@ -42,13 +42,10 @@ export const AIModelSchema = z.enum([
 
 export const TaskStatusSchema = z.enum([
   'open',
-  'claimed',
+  'picked',
   'in_progress',
   'completed',
-  'failed',
-  'stalled',
-  'expired',
-  'stale',
+  'verified',
 ] as const satisfies readonly TaskStatus[])
 
 export const TaskTypeSchema = z.enum([
@@ -64,17 +61,35 @@ export const TaskTypeSchema = z.enum([
   'code-quality-review',
   'performance-analysis',
   'accessibility-audit',
+  'review-pr',
+  'review-pr-security',
+  'review-pr-tests',
 ] as const satisfies readonly TaskType[])
+
+export const SourceTypeSchema = z.enum([
+  'issue',
+  'pull-request',
+] as const satisfies readonly SourceType[])
 
 // ---------------------------------------------------------------------------
 // Request / mutation schemas
 // ---------------------------------------------------------------------------
 
-export const CreateTaskSchema = z.object({
-  github_issue_url: GitHubIssueUrlSchema,
-  template_id: z.string().min(1),
-  custom_instructions: z.string().max(500).optional(),
-})
+/** PR review task types that require a PR URL */
+const PR_TASK_TYPES = new Set<string>(['review-pr', 'review-pr-security', 'review-pr-tests'])
+
+export const CreateTaskSchema = z
+  .object({
+    github_issue_url: GitHubIssueUrlSchema.optional(),
+    github_pr_url: GitHubPRUrlSchema.optional(),
+    template_id: z.string().min(1),
+    custom_instructions: z.string().max(500).optional(),
+  })
+  .refine(
+    (data) =>
+      (data.github_issue_url !== undefined) !== (data.github_pr_url !== undefined),
+    { message: 'Exactly one of github_issue_url or github_pr_url is required' },
+  )
 
 export const CompleteTaskSchema = z
   .object({
@@ -105,8 +120,9 @@ export const TaskFilterSchema = z.object({
   task_type: TaskTypeSchema.optional(),
   token_estimate: z.enum(['small', 'medium', 'large', 'any']).optional(),
   status: z
-    .enum(['open', 'claimed', 'in_progress', 'completed'] as const)
+    .enum(['open', 'picked', 'in_progress', 'completed', 'verified'] as const)
     .optional(),
+  source_type: SourceTypeSchema.optional(),
   page: z.number().int().positive().default(1),
   per_page: z.number().int().min(1).max(100).default(20),
 })

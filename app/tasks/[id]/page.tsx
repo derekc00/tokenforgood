@@ -4,9 +4,7 @@ import {
   ExternalLink,
   GitPullRequest,
   CheckCircle2,
-  Circle,
   Clock,
-  AlertTriangle,
   Star,
   Terminal,
   Cpu,
@@ -70,7 +68,7 @@ function modelBadgeColor(model: string): string {
 // ---------------------------------------------------------------------------
 
 function StatusBadge({ task }: { task: Task }) {
-  const { status, claimed_by, last_heartbeat_at, claimed_at } = task
+  const { status, pick_count } = task
 
   if (status === 'open') {
     return (
@@ -84,28 +82,25 @@ function StatusBadge({ task }: { task: Task }) {
     )
   }
 
-  if (status === 'claimed') {
+  if (status === 'picked') {
     return (
       <span className="flex items-center gap-1.5 text-sm text-amber-500">
         <span className="relative inline-flex size-2.5 rounded-full bg-amber-400" />
-        {claimed_by ? `Claimed by @${claimed_by}` : 'Claimed'}
+        {pick_count > 1
+          ? `${pick_count} donors working on this`
+          : '1 donor working on this'}
       </span>
     )
   }
 
   if (status === 'in_progress') {
-    const since = last_heartbeat_at ?? claimed_at
-    const ago = since
-      ? formatDistanceToNow(new Date(since), { addSuffix: false })
-      : null
     return (
       <span className="flex items-center gap-1.5 text-sm text-blue-500">
         <span className="relative flex size-2.5">
           <span className="absolute inline-flex size-full animate-pulse rounded-full bg-blue-400 opacity-75" />
           <span className="relative inline-flex size-2.5 rounded-full bg-blue-500" />
         </span>
-        {claimed_by ? `@${claimed_by}` : 'In progress'}
-        {ago ? ` · ${ago} ago` : ''}
+        In progress
       </span>
     )
   }
@@ -119,30 +114,17 @@ function StatusBadge({ task }: { task: Task }) {
     )
   }
 
-  if (status === 'stalled') {
+  if (status === 'verified') {
     return (
-      <span className="flex items-center gap-1.5 text-sm text-orange-500">
-        <AlertTriangle className="size-4" />
-        Stalled
+      <span className="flex items-center gap-1.5 text-sm text-emerald-600">
+        <CheckCircle2 className="size-4" />
+        Verified
       </span>
     )
   }
 
-  if (status === 'failed') {
-    return (
-      <span className="flex items-center gap-1.5 text-sm text-destructive">
-        <Circle className="size-4" />
-        Failed
-      </span>
-    )
-  }
-
-  return (
-    <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-      <Clock className="size-4" />
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  )
+  // Exhaustive — all statuses handled above
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -481,19 +463,11 @@ export default async function TaskPage({
                       </div>
                     )}
 
-                    {task.claimed_by && (
+                    {task.pick_count > 0 && (
                       <div className="flex items-center gap-2">
                         <User className="size-4 shrink-0" />
                         <span>
-                          Completed by{' '}
-                          <a
-                            href={`https://github.com/${task.claimed_by}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-foreground hover:underline"
-                          >
-                            @{task.claimed_by}
-                          </a>
+                          {task.pick_count} donor{task.pick_count !== 1 ? 's' : ''} contributed
                         </span>
                       </div>
                     )}
@@ -678,19 +652,14 @@ export default async function TaskPage({
             <CardContent className="space-y-2 p-4">
               <StatusBadge task={task} />
 
-              {(task.status === 'claimed' || task.status === 'in_progress') &&
-                task.claimed_by && (
-                  <p className="text-xs text-muted-foreground">
-                    In progress by @{task.claimed_by}
-                    {task.claimed_at
-                      ? ` since ${formatDistanceToNow(new Date(task.claimed_at), { addSuffix: false })} ago`
-                      : ''}
-                  </p>
-                )}
+              {task.status === 'picked' && task.pick_count > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {task.pick_count} donor{task.pick_count !== 1 ? 's' : ''} working on this
+                </p>
+              )}
 
               {task.status === 'completed' && (
                 <div className="space-y-1 text-xs text-muted-foreground">
-                  {task.claimed_by && <p>Completed by @{task.claimed_by}</p>}
                   {task.pr_url && (
                     <a
                       href={task.pr_url}

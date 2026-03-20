@@ -50,7 +50,7 @@ function passesStatusFilter(task: Task, filter: StatusFilter | null): boolean {
   if (!filter) return true
   if (filter === "open") return task.status === "open"
   if (filter === "in_progress")
-    return task.status === "claimed" || task.status === "in_progress"
+    return task.status === "picked" || task.status === "in_progress"
   if (filter === "completed") return task.status === "completed"
   return true
 }

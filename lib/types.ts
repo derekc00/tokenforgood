@@ -4,13 +4,10 @@
 
 export type TaskStatus =
   | 'open'
-  | 'claimed'
+  | 'picked'
   | 'in_progress'
   | 'completed'
-  | 'failed'
-  | 'stalled'
-  | 'expired'
-  | 'stale'
+  | 'verified'
 
 export type TaskType =
   | 'write-tests'
@@ -25,12 +22,17 @@ export type TaskType =
   | 'code-quality-review'
   | 'performance-analysis'
   | 'accessibility-audit'
+  | 'review-pr'
+  | 'review-pr-security'
+  | 'review-pr-tests'
+
+export type SourceType = 'issue' | 'pull-request'
 
 export type TemplateCategory = 'code-generation' | 'review-analysis'
 
 export type ExecutionMode = 'safe' | 'full'
 
-export type OutputType = 'draft-pr' | 'issue-comment'
+export type OutputType = 'draft-pr' | 'issue-comment' | 'pr-review-comment'
 
 export type AIProvider =
   | 'claude-max'
@@ -104,6 +106,18 @@ export interface GitHubIssue {
   repo_full_name: string
 }
 
+export interface GitHubPR {
+  number: number
+  title: string
+  body: string
+  head_sha: string
+  base_sha: string
+  changed_files_count: number
+  diff_url: string
+  html_url: string
+  repo_full_name: string
+}
+
 export interface Template {
   id: string
   slug: TaskType
@@ -124,11 +138,16 @@ export interface Template {
 
 export interface Task {
   id: string
-  // Source issue
+  // Source
+  source_type: SourceType
+  // Issue source (populated when source_type === 'issue')
   github_issue_url: string
   github_issue_number: number
   github_issue_title: string
   github_issue_body_sanitized: string
+  // PR source (populated when source_type === 'pull-request')
+  github_pr_url: string | null
+  github_pr_number: number | null
   // Repository
   repo_owner: string
   repo_name: string
@@ -143,9 +162,8 @@ export interface Task {
   requester: Profile | null
   // Status
   status: TaskStatus
-  claimed_by: string | null
-  claimed_at: string | null
-  last_heartbeat_at: string | null
+  /** Number of donors who have copied the prompt (telemetry, non-exclusive) */
+  pick_count: number
   completed_at: string | null
   // Completion
   pr_url: string | null

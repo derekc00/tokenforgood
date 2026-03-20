@@ -22,13 +22,6 @@ export interface PaginatedResult<T> {
   has_more: boolean
 }
 
-export interface ClaimResult {
-  success: boolean
-  task?: Task
-  claim_token?: string
-  error?: string
-}
-
 export interface CompleteResult {
   success: boolean
   completion?: TaskCompletion
@@ -47,17 +40,13 @@ export interface DataService {
     data: { github_issue_url: string; template_id: string },
     userId: string,
   ): Promise<Task>
-  claimTask(taskId: string, userId: string): Promise<ClaimResult>
-  unclaimTask(taskId: string, userId: string): Promise<{ success: boolean; error?: string }>
+  pickTask(taskId: string, donorId?: string): Promise<{ success: boolean; error?: string }>
+  expirePickedTasks(maxAgeHours?: number): Promise<number>
   completeTask(
     taskId: string,
     userId: string,
     data: CompleteTaskInput,
   ): Promise<CompleteResult>
-  heartbeat(
-    taskId: string,
-    claimToken: string,
-  ): Promise<{ success: boolean; error?: string }>
 
   // Templates
   getTemplates(): Promise<Template[]>

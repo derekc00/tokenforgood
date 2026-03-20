@@ -1,17 +1,21 @@
-import type { RepoProfile, GitHubIssue, TaskType } from '@/lib/types'
+import type { RepoProfile, GitHubIssue, GitHubPR, TaskType, SourceType } from '@/lib/types'
 
 export interface TemplateDefinition {
   slug: TaskType
   name: string
   description: string
   category: 'code-generation' | 'review-analysis'
-  outputType: 'draft-pr' | 'issue-comment'
+  outputType: 'draft-pr' | 'issue-comment' | 'pr-review-comment'
   recommendedMode: 'safe' | 'full'
   tokenEstimateLow: number
   tokenEstimateHigh: number
   recommendedModel: 'haiku' | 'sonnet' | 'opus'
   fileRestrictions: string[] | null
-  buildInstructions(repo: RepoProfile, issue: GitHubIssue): string
+  sourceType: SourceType
+  needsDiff: boolean
+  needsIssueBody: boolean
+  supportsSections: boolean
+  buildInstructions(repo: RepoProfile, context: GitHubIssue | GitHubPR): string
 }
 
 export const TEMPLATE_REGISTRY: Record<TaskType, TemplateDefinition> = {
@@ -27,6 +31,10 @@ export const TEMPLATE_REGISTRY: Record<TaskType, TemplateDefinition> = {
     tokenEstimateHigh: 60,
     recommendedModel: 'sonnet',
     fileRestrictions: ['**/*.test.ts', '**/*.spec.ts', '**/*.test.js', '**/*.spec.js'],
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const testRunner = repo.test_runner || 'the existing test framework'
       const lang = repo.language || 'the project language'
@@ -73,6 +81,10 @@ Constraints:
     tokenEstimateHigh: 50,
     recommendedModel: 'sonnet',
     fileRestrictions: null,
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const framework = repo.framework ? ` (${repo.framework})` : ''
       const pm = repo.package_manager || 'npm'
@@ -120,6 +132,10 @@ Constraints:
     tokenEstimateHigh: 80,
     recommendedModel: 'opus',
     fileRestrictions: null,
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       return `Perform a full security audit of ${repo.full_name} as requested in issue \
 #${issue.number}: "${issue.title}".
@@ -182,6 +198,10 @@ Constraints:
     tokenEstimateHigh: 70,
     recommendedModel: 'opus',
     fileRestrictions: null,
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const framework = repo.framework ? `The project uses ${repo.framework}. ` : ''
       return `Perform an architecture review of ${repo.full_name} as requested in issue \
@@ -248,6 +268,10 @@ Constraints:
     tokenEstimateHigh: 20,
     recommendedModel: 'haiku',
     fileRestrictions: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const lang = repo.language || 'TypeScript'
       const docStyle = lang === 'TypeScript' || lang === 'JavaScript' ? 'TSDoc' : 'JSDoc'
@@ -297,6 +321,10 @@ Constraints:
     tokenEstimateHigh: 30,
     recommendedModel: 'sonnet',
     fileRestrictions: ['.github/workflows/**'],
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const pm = repo.package_manager || 'npm'
       const testRunner = repo.test_runner || 'the existing test runner'
@@ -356,6 +384,10 @@ Constraints:
       'vite.config.*',
       'vitest.config.*',
     ],
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const pm = repo.package_manager || 'npm'
       return `Migrate the test suite in ${repo.full_name} from Jest to Vitest as \
@@ -420,6 +452,10 @@ Constraints:
     tokenEstimateHigh: 45,
     recommendedModel: 'sonnet',
     fileRestrictions: ['**/*.ts', '**/*.tsx', 'tsconfig.json'],
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const pm = repo.package_manager || 'npm'
       return `Add TypeScript types to ${repo.full_name} as described in issue \
@@ -478,6 +514,10 @@ Constraints:
     tokenEstimateHigh: 15,
     recommendedModel: 'haiku',
     fileRestrictions: ['package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml'],
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const pm = repo.package_manager || 'npm'
       return `Perform a full dependency audit of ${repo.full_name} as described in \
@@ -549,6 +589,10 @@ Constraints:
     tokenEstimateHigh: 50,
     recommendedModel: 'sonnet',
     fileRestrictions: null,
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       return `Perform a code quality review of ${repo.full_name} as described in issue \
 #${issue.number}: "${issue.title}".
@@ -623,6 +667,10 @@ Constraints:
     tokenEstimateHigh: 70,
     recommendedModel: 'opus',
     fileRestrictions: null,
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const framework = repo.framework || null
       const frameworkHint = framework
@@ -712,6 +760,10 @@ Constraints:
     tokenEstimateHigh: 40,
     recommendedModel: 'sonnet',
     fileRestrictions: ['**/*.tsx', '**/*.jsx', '**/*.vue', '**/*.svelte'],
+    sourceType: 'issue',
+    needsDiff: false,
+    needsIssueBody: true,
+    supportsSections: false,
     buildInstructions(repo, issue) {
       const framework = repo.framework || 'the frontend framework in use'
       return `Perform an accessibility audit of ${repo.full_name} as described in issue \
@@ -790,6 +842,194 @@ Constraints:
 - Read-only analysis — do not modify any source files.
 - Cite the specific WCAG 2.1 success criterion for each violation.
 - Distinguish between automated-detectable issues and those requiring manual testing.`
+    },
+  },
+
+  'review-pr': {
+    slug: 'review-pr',
+    name: 'General PR Review',
+    description: 'Reviews a pull request for code quality, correctness, and adherence to project conventions. Posts a structured review comment.',
+    category: 'review-analysis',
+    outputType: 'pr-review-comment',
+    recommendedMode: 'safe',
+    tokenEstimateLow: 10,
+    tokenEstimateHigh: 40,
+    recommendedModel: 'sonnet',
+    fileRestrictions: null,
+    sourceType: 'pull-request',
+    needsDiff: true,
+    needsIssueBody: false,
+    supportsSections: true,
+    buildInstructions(repo, context) {
+      const pr = context as GitHubPR
+      return `Review pull request #${pr.number} in ${repo.full_name}.
+
+PR title: "${pr.title}"
+PR description:
+${pr.body}
+
+Clone the repository at commit ${pr.head_sha} and review the changes between ${pr.base_sha} and ${pr.head_sha}.
+
+Review checklist:
+1. Correctness — does the code do what the PR description claims?
+2. Edge cases — are boundary conditions handled?
+3. Code style — does the code follow existing conventions in the repository?
+4. Types — are TypeScript types precise and correct?
+5. Tests — are new/changed code paths covered by tests?
+6. Security — any injection, XSS, or auth bypass risks?
+7. Performance — any obvious N+1 queries, unnecessary re-renders, or O(n^2) loops?
+
+Output format (post as a PR review comment):
+## Code Review — PR #${pr.number}
+
+### Summary
+(2–3 sentence assessment)
+
+### Findings
+For each finding:
+**[SEVERITY: CRITICAL/HIGH/MEDIUM/LOW/NIT] — <short title>**
+- File: \`path/to/file.ts\` (line N)
+- Issue: what the problem is
+- Suggestion: concrete fix
+
+### Positive Observations
+(What the PR does well)
+
+Constraints:
+- Read-only analysis — do not modify any source files.
+- Be specific: cite file paths and line numbers from the diff.
+- Distinguish between blocking issues and nits.`
+    },
+  },
+
+  'review-pr-security': {
+    slug: 'review-pr-security',
+    name: 'PR Security Review',
+    description: 'Performs a security-focused review of a pull request, checking for injection vulnerabilities, auth bypass, secrets exposure, and OWASP Top 10 issues in the changed code.',
+    category: 'review-analysis',
+    outputType: 'pr-review-comment',
+    recommendedMode: 'safe',
+    tokenEstimateLow: 15,
+    tokenEstimateHigh: 50,
+    recommendedModel: 'opus',
+    fileRestrictions: null,
+    sourceType: 'pull-request',
+    needsDiff: true,
+    needsIssueBody: false,
+    supportsSections: true,
+    buildInstructions(repo, context) {
+      const pr = context as GitHubPR
+      return `Perform a security-focused review of pull request #${pr.number} in ${repo.full_name}.
+
+PR title: "${pr.title}"
+PR description:
+${pr.body}
+
+Clone the repository at commit ${pr.head_sha} and review the security implications of changes between ${pr.base_sha} and ${pr.head_sha}.
+
+Security review scope:
+1. Input validation — are all user inputs validated and sanitized?
+2. Authentication & authorization — are auth checks present and correct?
+3. Injection — SQL, NoSQL, command injection, template injection in changed code
+4. Secrets — any hardcoded tokens, API keys, or credentials?
+5. XSS — any unsanitized user content rendered in HTML?
+6. CSRF — are state-changing endpoints protected?
+7. Cryptography — are secure algorithms and practices used?
+8. Dependencies — do new dependencies have known CVEs?
+9. Error handling — do error messages leak sensitive information?
+10. Access control — are new endpoints properly guarded?
+
+Output format (post as a PR review comment):
+## Security Review — PR #${pr.number}
+
+### Risk Assessment
+(Overall risk level: LOW / MEDIUM / HIGH / CRITICAL)
+
+### Findings
+For each finding:
+**[SEVERITY: CRITICAL/HIGH/MEDIUM/LOW] — <short title>**
+- File: \`path/to/file.ts\` (line N)
+- OWASP Category: A0X
+- Vulnerability: description and exploit scenario
+- Remediation: concrete code fix
+
+### No Issues Found In
+(Areas reviewed with no security concerns — important for audit trail)
+
+Constraints:
+- Read-only analysis — do not modify any source files.
+- Only report findings with evidence from the diff.
+- Distinguish between confirmed vulnerabilities and items needing runtime verification.`
+    },
+  },
+
+  'review-pr-tests': {
+    slug: 'review-pr-tests',
+    name: 'PR Test Coverage Review',
+    description: 'Reviews a pull request for test adequacy — checks whether changed code paths have corresponding tests, identifies missing edge case coverage, and suggests specific test cases to add.',
+    category: 'review-analysis',
+    outputType: 'pr-review-comment',
+    recommendedMode: 'safe',
+    tokenEstimateLow: 10,
+    tokenEstimateHigh: 35,
+    recommendedModel: 'sonnet',
+    fileRestrictions: null,
+    sourceType: 'pull-request',
+    needsDiff: true,
+    needsIssueBody: false,
+    supportsSections: true,
+    buildInstructions(repo, context) {
+      const pr = context as GitHubPR
+      const testRunner = repo.test_runner || 'the existing test framework'
+      return `Review the test coverage of pull request #${pr.number} in ${repo.full_name}.
+
+PR title: "${pr.title}"
+PR description:
+${pr.body}
+
+Clone the repository at commit ${pr.head_sha} and analyze test coverage for the changes between ${pr.base_sha} and ${pr.head_sha}.
+
+Test review checklist:
+1. Coverage — does every changed function/method have at least one test?
+2. Happy path — is the primary use case tested?
+3. Edge cases — boundary values, empty inputs, null/undefined, error conditions
+4. Integration — are cross-module interactions tested where relevant?
+5. Regression — do existing tests still pass with the changes?
+6. Test quality — are tests testing behavior (not implementation details)?
+7. Naming — do test names describe the expected behavior?
+8. Mocking — are mocks used appropriately (not over-mocking)?
+
+For each untested code path, provide a specific test case suggestion using ${testRunner}.
+
+Output format (post as a PR review comment):
+## Test Coverage Review — PR #${pr.number}
+
+### Coverage Summary
+(Brief assessment of overall test adequacy)
+
+### Untested Code Paths
+For each gap:
+**<function/method name> in \`path/to/file.ts\`**
+- Lines: N–M
+- Risk: what could break without tests
+- Suggested test:
+\`\`\`typescript
+// test description
+\`\`\`
+
+### Missing Edge Cases
+(Specific scenarios that should be tested but aren't)
+
+### Test Quality Issues
+(Any existing tests that are brittle, over-mocked, or testing implementation details)
+
+### Positive Observations
+(Well-tested areas)
+
+Constraints:
+- Read-only analysis — do not modify any source files.
+- Be specific: reference exact functions and line numbers.
+- Provide runnable test code snippets, not pseudocode.`
     },
   },
 }
