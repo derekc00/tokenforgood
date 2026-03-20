@@ -3,7 +3,8 @@ const API_BASE = process.env.TOKENFORGOOD_API_URL ?? 'https://tokenforgood.dev'
 export async function fetchTask(taskId: string): Promise<TaskResponse> {
   const response = await fetch(`${API_BASE}/api/tasks/${taskId}`)
   if (!response.ok) throw new Error(`Task not found: ${taskId}`)
-  return response.json() as Promise<TaskResponse>
+  const data: TaskResponse = await response.json()
+  return data
 }
 
 export async function claimTask(taskId: string, githubToken?: string): Promise<{ claimToken: string }> {
@@ -16,7 +17,7 @@ export async function claimTask(taskId: string, githubToken?: string): Promise<{
     body: JSON.stringify({}),
   })
   if (!response.ok) throw new Error('Failed to claim task')
-  const data = await response.json() as { claim_token: string }
+  const data: { claim_token: string } = await response.json()
   return { claimToken: data.claim_token }
 }
 
