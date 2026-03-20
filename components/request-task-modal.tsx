@@ -286,7 +286,7 @@ export function RequestTaskModal({
                         {parsedIssue.owner}/{parsedIssue.repo}
                       </span>
                       <span className="text-muted-foreground">
-                        Issue #{parsedIssue.number}
+                        Issue #{parsedIssue.issueNumber}
                       </span>
                     </div>
                   </div>

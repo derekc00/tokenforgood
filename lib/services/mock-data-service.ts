@@ -18,6 +18,7 @@ import {
   TaskTypeSchema,
   TaskStatusSchema,
 } from '@/lib/schemas'
+import { parseGitHubIssueUrl } from '@/lib/github/repo-profile'
 import type {
   DataService,
   PaginatedResult,
@@ -424,7 +425,6 @@ interface MockStore {
   profiles: Map<string, Profile>           // keyed by id
   profilesByUsername: Map<string, Profile> // keyed by github_username
   templates: Map<string, Template>         // keyed by id
-  templatesBySlug: Map<string, Template>   // keyed by slug
   completions: Map<string, TaskCompletion> // keyed by completion id
   activity: ActivityFeedItem[]
   stats: PlatformStats
@@ -457,10 +457,8 @@ export class MockDataService implements DataService {
 
     // Templates
     const templates = new Map<string, Template>()
-    const templatesBySlug = new Map<string, Template>()
     for (const raw of fromJson<Template[]>(rawTemplates)) {
       templates.set(raw.id, raw)
-      templatesBySlug.set(raw.slug, raw)
     }
 
     // Tasks — enrich with relations after both maps are built
@@ -581,7 +579,6 @@ export class MockDataService implements DataService {
       profiles,
       profilesByUsername,
       templates,
-      templatesBySlug,
       completions: new Map(),
       activity,
       stats,
@@ -693,12 +690,10 @@ export class MockDataService implements DataService {
     const requester = this.store.profiles.get(userId) ?? null
 
     // Parse owner/repo/issue number from the GitHub URL
-    const urlMatch = data.github_issue_url.match(
-      /github\.com\/([\w.-]+)\/([\w.-]+)\/issues\/(\d+)/,
-    )
-    const repoOwner = urlMatch?.[1] ?? 'unknown'
-    const repoName = urlMatch?.[2] ?? 'unknown'
-    const issueNumber = urlMatch?.[3] ? parseInt(urlMatch[3], 10) : 0
+    const parsed = parseGitHubIssueUrl(data.github_issue_url)
+    const repoOwner = parsed?.owner ?? 'unknown'
+    const repoName = parsed?.repo ?? 'unknown'
+    const issueNumber = parsed?.issueNumber ?? 0
 
     const now = new Date().toISOString()
     const id = generateUuid()
@@ -894,38 +889,10 @@ export class MockDataService implements DataService {
     return Array.from(this.store.templates.values())
   }
 
-  async getTemplate(id: string): Promise<Template | null> {
-    return this.store.templates.get(id) ?? null
-  }
-
-  async getTemplateBySlug(slug: string): Promise<Template | null> {
-    return this.store.templatesBySlug.get(slug) ?? null
-  }
-
   // ---------- Profiles ----------
 
   async getProfile(username: string): Promise<Profile | null> {
     return this.store.profilesByUsername.get(username) ?? null
-  }
-
-  async getProfileById(id: string): Promise<Profile | null> {
-    return this.store.profiles.get(id) ?? null
-  }
-
-  async updateProfile(id: string, data: Partial<Profile>): Promise<Profile> {
-    const existing = this.store.profiles.get(id)
-    if (!existing) {
-      throw new Error(`Profile not found: ${id}`)
-    }
-    const updated: Profile = {
-      ...existing,
-      ...data,
-      id, // never overwrite id
-      updated_at: new Date().toISOString(),
-    }
-    this.store.profiles.set(id, updated)
-    this.store.profilesByUsername.set(updated.github_username, updated)
-    return updated
   }
 
   // ---------- Stats & Feed ----------

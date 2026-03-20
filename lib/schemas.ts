@@ -89,10 +89,6 @@ export const CompleteTaskSchema = z
     message: 'Either a PR URL or issue comment URL is required',
   })
 
-export const ClaimTaskSchema = z.object({
-  task_id: z.string().uuid(),
-})
-
 export const HeartbeatSchema = z.object({
   claim_token: z.string().min(1),
 })
@@ -112,36 +108,10 @@ export const TaskFilterSchema = z.object({
 })
 
 // ---------------------------------------------------------------------------
-// Budget calculator schema
-// ---------------------------------------------------------------------------
-
-export const BudgetSchema = z.object({
-  budget_usd: z.number().min(1).max(1000),
-  provider: AIProviderSchema,
-  model_allocation: z
-    .enum(['auto', 'haiku', 'sonnet', 'opus', 'gpt-4o', 'o3'] as const)
-    .default('auto'),
-  task_types: z.array(TaskTypeSchema).optional(),
-})
-
-// ---------------------------------------------------------------------------
-// Profile update schema
-// ---------------------------------------------------------------------------
-
-export const ProfileUpdateSchema = z.object({
-  preferred_provider: AIProviderSchema.nullable(),
-  preferred_model: AIModelSchema.nullable(),
-  email_notifications: z.boolean(),
-})
-
-// ---------------------------------------------------------------------------
 // Inferred TypeScript types from schemas
 // ---------------------------------------------------------------------------
 
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>
 export type CompleteTaskInput = z.infer<typeof CompleteTaskSchema>
-export type ClaimTaskInput = z.infer<typeof ClaimTaskSchema>
 export type HeartbeatInput = z.infer<typeof HeartbeatSchema>
 export type TaskFilterInput = z.infer<typeof TaskFilterSchema>
-export type BudgetInput = z.infer<typeof BudgetSchema>
-export type ProfileUpdateInput = z.infer<typeof ProfileUpdateSchema>

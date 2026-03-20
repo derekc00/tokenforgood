@@ -182,33 +182,6 @@ export interface TaskCompletion {
   requester_note: string | null
 }
 
-export interface TaskAttempt {
-  id: string
-  task_id: string
-  donor_id: string
-  claimed_at: string
-  released_at: string | null
-  completed: boolean
-  prompt_snapshot: string
-  claim_token: string
-}
-
-export interface Notification {
-  id: string
-  user_id: string
-  type:
-    | 'task_claimed'
-    | 'task_completed'
-    | 'pr_merged'
-    | 'pr_closed'
-    | 'thank_you'
-    | 'claim_expiring'
-  message: string
-  read: boolean
-  task_id: string | null
-  created_at: string
-}
-
 // ---------------------------------------------------------------------------
 // Aggregates and computed views
 // ---------------------------------------------------------------------------
@@ -249,19 +222,6 @@ export interface ProviderPricing {
   /** Per-task flat-rate estimate keyed by TaskType; null when is_flat_rate is false */
   flat_rate_estimate_per_task: Partial<Record<TaskType, number>> | null
   notes: string
-}
-
-// ---------------------------------------------------------------------------
-// Budget calculator
-// ---------------------------------------------------------------------------
-
-export interface BudgetAllocation {
-  provider: AIProvider
-  model: AIModel
-  budget_usd: number
-  selected_tasks: Task[]
-  total_estimated_cost_usd: number
-  generated_command: string
 }
 
 // ---------------------------------------------------------------------------
