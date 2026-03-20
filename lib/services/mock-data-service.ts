@@ -8,7 +8,6 @@ import type {
   GeneratedPrompt,
   ProviderPricing,
   AIProvider,
-  AIModel,
   TaskType,
   RepoProfile,
 } from '@/lib/types'
@@ -177,8 +176,6 @@ function fromJson<T>(value: unknown): T {
   return JSON.parse(JSON.stringify(value))
 }
 
-const KNOWN_MODELS: readonly AIModel[] = ['haiku', 'sonnet', 'opus', 'gpt-4o', 'o3', 'copilot']
-
 const KNOWN_TASK_TYPES: readonly TaskType[] = [
   'write-tests',
   'implement-feature',
@@ -210,9 +207,10 @@ function coerceProfile(raw: RawProfile): Profile {
     display_name: raw.display_name,
     bio: raw.bio,
     preferred_provider: normaliseProvider(raw.preferred_provider),
-    preferred_model: preferredModel !== null && includes(KNOWN_MODELS, preferredModel)
-      ? preferredModel
-      : null,
+    preferred_model: (() => {
+      const r = AIModelSchema.safeParse(preferredModel)
+      return r.success ? r.data : null
+    })(),
   }
 }
 
@@ -342,19 +340,21 @@ function matchesTokenFilter(
 function flattenPricing(raw: RawPricing): ProviderPricing[] {
   const result: ProviderPricing[] = []
   for (const provider of raw.providers) {
-    // provider.id is always a non-null string in the JSON
+    // Throws on unknown provider: mock JSON is controlled data, so an
+    // unrecognised provider is a programmer error, not a runtime condition.
     const providerKey = AIProviderSchema.parse(provider.id.replace(/_/g, '-'))
     const isFlat = provider.billing_model === 'flat_rate_estimate'
 
     for (const model of provider.models) {
-      if (!includes(KNOWN_MODELS, model.id)) continue
+      const modelParsed = AIModelSchema.safeParse(model.id)
+      if (!modelParsed.success) continue
       const flatRates: Partial<Record<TaskType, number>> | null = isFlat
         ? buildFlatRatesFromTaskTypes(model)
         : null
 
       result.push({
         provider: providerKey,
-        model: AIModelSchema.parse(model.id),
+        model: modelParsed.data,
         display_name: model.display_name,
         input_cost_per_mtok: model.input_cost_per_mtok ?? 0,
         output_cost_per_mtok: model.output_cost_per_mtok ?? 0,
@@ -509,6 +509,8 @@ export class MockDataService implements DataService {
           repo_profile: null,
           template_id: '',
           template: null,
+          // Soft fallback: unknown task types default to 'write-tests' rather than
+          // throwing, so new task types in JSON don't crash the mock store.
           task_type: includes(KNOWN_TASK_TYPES, item.task.task_type) ? item.task.task_type : 'write-tests',
           requester_id: '',
           requester: null,
@@ -530,6 +532,8 @@ export class MockDataService implements DataService {
           id: item.id,
           donor,
           task,
+          // Soft fallback: unknown activity actions default to 'completed' rather than
+          // throwing, so new action types in JSON don't crash the mock store.
           action: includes(KNOWN_ACTIVITY_ACTIONS, item.action) ? item.action : 'completed',
           pr_url: item.pr_url,
           created_at: item.created_at,
