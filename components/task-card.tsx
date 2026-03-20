@@ -1,12 +1,6 @@
 "use client"
 
-import { formatDistanceToNow } from "date-fns"
 import {
-  CheckCircle2,
-  Circle,
-  Clock,
-  AlertTriangle,
-  ExternalLink,
   PlayCircle,
   Cpu,
 } from "lucide-react"
@@ -22,108 +16,7 @@ import {
   CardHeader,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-
-// ---------------------------------------------------------------------------
-// Status indicator
-// ---------------------------------------------------------------------------
-
-function StatusIndicator({ task }: { task: Task }) {
-  const { status, claimed_by, last_heartbeat_at, claimed_at, pr_url } = task
-
-  if (status === "open") {
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-emerald-500">
-        <span className="relative flex size-2">
-          <span className="absolute inline-flex size-full animate-pulse rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-        </span>
-        Open
-      </span>
-    )
-  }
-
-  if (status === "claimed") {
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-amber-500">
-        <span className="relative flex size-2">
-          <span className="relative inline-flex size-2 rounded-full bg-amber-400" />
-        </span>
-        {claimed_by ? `Claimed by @${claimed_by}` : "Claimed"}
-      </span>
-    )
-  }
-
-  if (status === "in_progress") {
-    const since = last_heartbeat_at ?? claimed_at
-    const ago = since
-      ? formatDistanceToNow(new Date(since), { addSuffix: false })
-      : null
-
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-blue-500">
-        <span className="relative flex size-2">
-          <span className="absolute inline-flex size-full animate-pulse rounded-full bg-blue-400 opacity-75" />
-          <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
-        </span>
-        {claimed_by ? `@${claimed_by}` : "In progress"}
-        {ago ? ` · ${ago} ago` : ""}
-      </span>
-    )
-  }
-
-  if (status === "completed") {
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <CheckCircle2 className="size-3.5 text-emerald-500" />
-        {pr_url ? (
-          <a
-            href={pr_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-0.5 hover:underline"
-          >
-            Resolved
-            {claimed_by ? ` by @${claimed_by}` : ""}
-            <ExternalLink className="size-2.5 opacity-60" />
-          </a>
-        ) : (
-          <span>
-            Completed{claimed_by ? ` by @${claimed_by}` : ""}
-          </span>
-        )}
-      </span>
-    )
-  }
-
-  if (status === "stalled") {
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-orange-500">
-        <AlertTriangle className="size-3.5" />
-        Stalled
-      </span>
-    )
-  }
-
-  if (status === "failed") {
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-destructive">
-        <Circle className="size-3.5" />
-        Failed
-      </span>
-    )
-  }
-
-  if (status === "expired" || status === "stale") {
-    return (
-      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Clock className="size-3.5" />
-        {status === "expired" ? "Expired" : "Stale"}
-      </span>
-    )
-  }
-
-  return null
-}
+import { StatusIndicator } from "@/components/status-indicator"
 
 // ---------------------------------------------------------------------------
 // Token estimate label
@@ -229,7 +122,14 @@ export function TaskCard({
               )}
             </span>
             {(showCompletedBy || task.status !== "completed") && (
-              <StatusIndicator task={task} />
+              <StatusIndicator
+                status={task.status}
+                size="sm"
+                claimedBy={task.claimed_by}
+                lastHeartbeatAt={task.last_heartbeat_at}
+                claimedAt={task.claimed_at}
+                prUrl={task.pr_url}
+              />
             )}
           </div>
 
