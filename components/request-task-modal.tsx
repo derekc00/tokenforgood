@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { GitHubIssueUrlSchema } from "@/lib/schemas"
-import { parseGitHubIssueUrl } from "@/lib/github/repo-profile"
+import { parseGitHubIssueUrl } from "@/lib/github/url"
 import type { Template, TemplateCategory } from "@/lib/types"
 
 // ---------------------------------------------------------------------------
@@ -286,7 +286,7 @@ export function RequestTaskModal({
                         {parsedIssue.owner}/{parsedIssue.repo}
                       </span>
                       <span className="text-muted-foreground">
-                        Issue #{parsedIssue.number}
+                        Issue #{parsedIssue.issueNumber}
                       </span>
                     </div>
                   </div>

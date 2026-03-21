@@ -71,13 +71,9 @@ export interface DataService {
 
   // Templates
   getTemplates(): Promise<Template[]>
-  getTemplate(id: string): Promise<Template | null>
-  getTemplateBySlug(slug: string): Promise<Template | null>
 
   // Profiles
   getProfile(username: string): Promise<Profile | null>
-  getProfileById(id: string): Promise<Profile | null>
-  updateProfile(id: string, data: Partial<Profile>): Promise<Profile>
 
   // Stats & Feed
   getPlatformStats(): Promise<PlatformStats>
