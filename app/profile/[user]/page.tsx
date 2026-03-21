@@ -300,10 +300,11 @@ export default async function ProfilePage({
   const profile = await service.getProfile(user)
   if (!profile) notFound()
 
-  // Fetch only the tasks relevant to this user — avoids a full table scan
+  // Scoped to this user's tasks; real DB would use an indexed query.
+  // per_page:1000 ensures users with many tasks are not truncated.
   const [donorResult, requesterResult] = await Promise.all([
-    service.getTasksByDonor(profile.id),
-    service.getTasksByRequester(profile.id),
+    service.getTasksByDonor(profile.id, { per_page: 1000 }),
+    service.getTasksByRequester(profile.id, { per_page: 1000 }),
   ])
 
   const completedTasks = donorResult.data
