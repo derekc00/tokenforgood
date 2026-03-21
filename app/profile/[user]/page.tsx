@@ -300,17 +300,15 @@ export default async function ProfilePage({
   const profile = await service.getProfile(user)
   if (!profile) notFound()
 
-  // Fetch all tasks to derive contributions and requests
-  const allTasksResult = await service.getTasks({ page: 1, per_page: 100 })
-  const allTasks = allTasksResult.data
+  // Scoped to this user's tasks; real DB would use an indexed query.
+  // per_page:1000 ensures users with many tasks are not truncated.
+  const [donorResult, requesterResult] = await Promise.all([
+    service.getTasksByDonor(profile.id, { per_page: 1000 }),
+    service.getTasksByRequester(profile.id, { per_page: 1000 }),
+  ])
 
-  // Tasks completed by this user (claimed_by + status=completed)
-  const completedTasks = allTasks.filter(
-    (t) => t.claimed_by === profile.id && t.status === 'completed',
-  )
-
-  // Tasks requested by this user
-  const requestedTasks = allTasks.filter((t) => t.requester_id === profile.id)
+  const completedTasks = donorResult.data
+  const requestedTasks = requesterResult.data
 
   // Build synthetic completions to fill up to profile.tasks_completed count
   const completions = buildMockCompletions(profile.id, completedTasks)
