@@ -15,12 +15,19 @@
     "dist",
     "README.md"
   ],
-  "keywords": ["tokenforgood", "open-source", "ai", "claude"],
+  "keywords": [
+    "tokenforgood",
+    "open-source",
+    "ai",
+    "claude"
+  ],
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

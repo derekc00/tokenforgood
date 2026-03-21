@@ -1,49 +1,23 @@
+import { z } from 'zod'
+import {
+  GitHubRepoSchema,
+  GitHubIssueRawSchema,
+  GitHubFileContentSchema,
+  GitHubPRSchema,
+  GitHubRootTreeSchema,
+  GitHubLanguagesSchema,
+} from './schemas'
+
 const GITHUB_API = 'https://api.github.com'
 
 // ---------------------------------------------------------------------------
-// Types
+// Types — derived from schemas to avoid duplication
 // ---------------------------------------------------------------------------
 
-export interface GitHubRepo {
-  full_name: string
-  name: string
-  owner: { login: string }
-  description: string | null
-  language: string | null
-  default_branch: string
-  stargazers_count: number
-  size: number
-  topics: string[]
-  open_issues_count: number
-  html_url: string
-}
-
-export interface GitHubIssueRaw {
-  number: number
-  title: string
-  body: string | null
-  state: string
-  labels: Array<{ name: string }>
-  created_at: string
-  updated_at: string
-  html_url: string
-}
-
-export interface GitHubFileContent {
-  content: string // base64 encoded
-  encoding: string
-  size: number
-}
-
-export interface GitHubPR {
-  number: number
-  html_url: string
-  draft: boolean
-  state: string
-  user: { login: string }
-  body: string | null
-  head: { repo: { full_name: string } }
-}
+export type GitHubRepo = z.infer<typeof GitHubRepoSchema>
+export type GitHubIssueRaw = z.infer<typeof GitHubIssueRawSchema>
+export type GitHubFileContent = z.infer<typeof GitHubFileContentSchema>
+export type GitHubPR = z.infer<typeof GitHubPRSchema>
 
 // ---------------------------------------------------------------------------
 // Auth / headers
@@ -60,7 +34,7 @@ function getGitHubHeaders(): HeadersInit {
 }
 
 // ---------------------------------------------------------------------------
-// Core fetch helper
+// Core fetch helpers
 // ---------------------------------------------------------------------------
 
 async function githubFetch(path: string): Promise<Response> {
@@ -69,18 +43,11 @@ async function githubFetch(path: string): Promise<Response> {
 }
 
 /**
- * Parse the JSON body of a Response into a typed value.
- * Uses JSON.parse (returns `any`) so TypeScript allows assignment to T
- * without a type assertion.
+ * Fetch JSON from the GitHub API and validate the response shape with a Zod
+ * schema.  Throws if the request fails or if the response does not conform to
+ * the schema.
  */
-async function parseJson<T>(res: Response): Promise<T> {
-  const text = await res.text()
-  // JSON.parse returns `any`, which TypeScript allows to be assigned to T
-  // without a type assertion, keeping the assertionStyle:"never" rule happy.
-  return JSON.parse(text)
-}
-
-async function githubFetchJson<T>(path: string): Promise<T> {
+async function githubFetchJson<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   const res = await githubFetch(path)
 
   if (!res.ok) {
@@ -90,7 +57,8 @@ async function githubFetchJson<T>(path: string): Promise<T> {
     )
   }
 
-  return parseJson<T>(res)
+  // JSON.parse returns `any`; schema.parse validates and narrows to T.
+  return schema.parse(JSON.parse(await res.text()))
 }
 
 // ---------------------------------------------------------------------------
@@ -101,7 +69,7 @@ async function githubFetchJson<T>(path: string): Promise<T> {
  * Fetch repository metadata.
  */
 export async function fetchRepo(owner: string, repo: string): Promise<GitHubRepo> {
-  return githubFetchJson<GitHubRepo>(`/repos/${owner}/${repo}`)
+  return githubFetchJson(`/repos/${owner}/${repo}`, GitHubRepoSchema)
 }
 
 /**
@@ -112,7 +80,10 @@ export async function fetchIssue(
   repo: string,
   issueNumber: number
 ): Promise<GitHubIssueRaw> {
-  return githubFetchJson<GitHubIssueRaw>(`/repos/${owner}/${repo}/issues/${issueNumber}`)
+  return githubFetchJson(
+    `/repos/${owner}/${repo}/issues/${issueNumber}`,
+    GitHubIssueRawSchema
+  )
 }
 
 /**
@@ -122,7 +93,7 @@ export async function fetchLanguages(
   owner: string,
   repo: string
 ): Promise<Record<string, number>> {
-  return githubFetchJson<Record<string, number>>(`/repos/${owner}/${repo}/languages`)
+  return githubFetchJson(`/repos/${owner}/${repo}/languages`, GitHubLanguagesSchema)
 }
 
 /**
@@ -144,7 +115,7 @@ export async function fetchFileContent(
     )
   }
 
-  return parseJson<GitHubFileContent>(res)
+  return GitHubFileContentSchema.parse(JSON.parse(await res.text()))
 }
 
 /**
@@ -152,8 +123,9 @@ export async function fetchFileContent(
  * Returns only the entry names (not full paths).
  */
 export async function fetchRootTree(owner: string, repo: string): Promise<string[]> {
-  const data = await githubFetchJson<{ tree: Array<{ path: string; type: string }> }>(
-    `/repos/${owner}/${repo}/git/trees/HEAD?recursive=0`
+  const data = await githubFetchJson(
+    `/repos/${owner}/${repo}/git/trees/HEAD?recursive=0`,
+    GitHubRootTreeSchema
   )
   return data.tree
     .filter((entry) => entry.type === 'blob' || entry.type === 'tree')
@@ -179,5 +151,5 @@ export async function fetchPR(
     )
   }
 
-  return parseJson<GitHubPR>(res)
+  return GitHubPRSchema.parse(JSON.parse(await res.text()))
 }
