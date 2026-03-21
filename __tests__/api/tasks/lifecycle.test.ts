@@ -330,6 +330,18 @@ describe('POST /api/tasks/:id/heartbeat', () => {
 
 // ===========================================================================
 // POST /api/tasks/:id/complete
+//
+// AUTH GAP — the route currently hard-codes userId = 'anonymous' because real
+// session-based auth has not been wired up yet.  As a result:
+//   • Any unauthenticated caller can complete any claimed task.
+//   • The claim_token returned by /claim is accepted in the response but is
+//     NOT validated on /complete — it is ignored entirely.
+//
+// TODO (auth): Once auth is integrated, add tests that verify:
+//   1. A request without a valid session / Bearer token is rejected (401).
+//   2. A request from a user who did NOT claim the task is rejected (403).
+//   3. Only the original claimer (identity matches task.claimed_by) can
+//      successfully complete the task.
 // ===========================================================================
 describe('POST /api/tasks/:id/complete', () => {
   async function createClaimedTask(): Promise<{ id: string; claim_token: string }> {
@@ -349,6 +361,11 @@ describe('POST /api/tasks/:id/complete', () => {
     return { id, claim_token }
   }
 
+  // NOTE: this test reflects CURRENT stubbed behavior — the route accepts any
+  // caller without verifying identity because userId is hard-coded to
+  // 'anonymous'.  The claim_token is not checked on this endpoint.
+  // TODO (auth): once ownership enforcement is added this test should supply a
+  // valid session credential and the bare-anonymous variant should return 401.
   it('completes a claimed task with pr_url and returns 200', async () => {
     const { id } = await createClaimedTask()
 
