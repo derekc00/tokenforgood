@@ -109,6 +109,12 @@ describe('parseOptions — --github-token', () => {
     expect(options.dryRun).toBe(false)
     expect(options.full).toBe(false)
   })
+
+  it('does not consume a peer flag as the token value', () => {
+    const { options } = parseOptions(['--github-token', '--dry-run'])
+    expect(options.githubToken).toBeNull()
+    expect(options.dryRun).toBe(true)
+  })
 })
 
 // ---------------------------------------------------------------------------
