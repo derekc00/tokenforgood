@@ -234,7 +234,7 @@ function buildDisplayPrompt(task: Task): string {
     lines.push('1. Format your findings as clear, actionable markdown')
     lines.push('2. Structure: Executive Summary → Detailed Findings → Recommendations')
     lines.push(
-      `3. The CLI wrapper will post this as a comment on issue #${task.github_issue_number}.`,
+      `3. Post your findings as a comment on issue #${task.github_issue_number}.`,
     )
   } else {
     lines.push('When your work is complete:')
@@ -242,7 +242,7 @@ function buildDisplayPrompt(task: Task): string {
     lines.push(
       `2. Commit with message: "feat: ${task.github_issue_title} (fixes #${task.github_issue_number})"`,
     )
-    lines.push('3. The CLI wrapper will open a draft PR on your behalf.')
+    lines.push('3. Push your branch and open a draft PR.')
   }
 
   return lines.join('\n')
@@ -284,7 +284,11 @@ export default async function TaskPage({
         <ChevronRight className="size-3.5 shrink-0" />
         <span className="font-mono">{task.repo_full_name}</span>
         <ChevronRight className="size-3.5 shrink-0" />
-        <span>Issue #{task.github_issue_number}</span>
+        <span>
+          {task.source_type === 'pull-request'
+            ? `PR #${task.github_pr_number}`
+            : `Issue #${task.github_issue_number}`}
+        </span>
       </nav>
 
       {/* ------------------------------------------------------------------ */}

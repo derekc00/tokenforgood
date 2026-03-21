@@ -236,14 +236,14 @@ function buildOutputInstructions(
       '',
       `   TokenForGood contribution by @${donorGitHubUsername}`,
       `   Issue: ${issue.html_url}"`,
-      '3. The CLI wrapper will open a draft PR on your behalf.',
+      '3. Push your branch and open a draft PR.',
     ].join('\n')
   } else {
     content = [
       'When your analysis is complete:',
       '1. Format your findings as clear, actionable markdown',
       '2. Structure: Executive Summary → Detailed Findings → Recommendations',
-      `3. The CLI wrapper will post this as a comment on issue #${issue.number}.`,
+      `3. Post your findings as a comment on issue #${issue.number}.`,
       `4. Tag your response: "[TokenForGood Analysis by @${donorGitHubUsername}]"`,
     ].join('\n')
   }
@@ -308,7 +308,6 @@ export interface BuildPRReviewPromptOptions {
   diffTruncated: boolean
   changedFiles: GitHubPRChangedFile[]
   changedFilesTruncated?: boolean
-  taskType: TaskType
   taskInstructions: string
   donorGitHubUsername?: string
   /** Progressive trust sections the donor opted into */

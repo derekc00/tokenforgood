@@ -75,7 +75,10 @@ function getGitHubHeaders(): HeadersInit {
 // ---------------------------------------------------------------------------
 
 async function githubFetch(path: string): Promise<Response> {
-  const res = await fetch(`${GITHUB_API}${path}`, { headers: getGitHubHeaders() })
+  const res = await fetch(`${GITHUB_API}${path}`, {
+    headers: getGitHubHeaders(),
+    next: { revalidate: 60 },
+  })
   return res
 }
 

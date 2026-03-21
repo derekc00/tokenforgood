@@ -205,12 +205,11 @@ export interface Notification {
   id: string
   user_id: string
   type:
-    | 'task_claimed'
+    | 'task_picked'
     | 'task_completed'
     | 'pr_merged'
     | 'pr_closed'
     | 'thank_you'
-    | 'claim_expiring'
   message: string
   read: boolean
   task_id: string | null
@@ -242,7 +241,7 @@ export interface ActivityFeedItem {
   id: string
   donor: Profile
   task: Task
-  action: 'completed' | 'claimed'
+  action: 'completed' | 'picked'
   pr_url: string | null
   created_at: string
 }

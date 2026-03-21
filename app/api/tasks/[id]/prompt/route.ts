@@ -92,8 +92,8 @@ export async function GET(
           diffTruncated: diffResult.truncated,
           changedFiles: changedFilesResult.files,
           changedFilesTruncated: changedFilesResult.truncated,
-          taskType: task.task_type,
           taskInstructions: templateInstructions,
+          donorGitHubUsername: 'anonymous', // TODO: pass authenticated donor username
           sections,
         })
 

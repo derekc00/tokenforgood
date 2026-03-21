@@ -302,11 +302,14 @@ export default async function ProfilePage({
 
   const allTasks = allTasksResult.data
 
-  // Split tasks in a single pass: completed (mock — no donor tracking yet) and requested
+  // Split tasks in a single pass: completed by this user and requested by this user
   const completedTasks: Task[] = []
   const requestedTasks: Task[] = []
   for (const t of allTasks) {
-    if (t.status === 'completed' || t.status === 'verified') {
+    if (
+      (t.status === 'completed' || t.status === 'verified') &&
+      t.requester_id === profile.id
+    ) {
       completedTasks.push(t)
     }
     if (t.requester_id === profile.id) {

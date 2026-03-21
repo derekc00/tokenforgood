@@ -75,9 +75,6 @@ export const SourceTypeSchema = z.enum([
 // Request / mutation schemas
 // ---------------------------------------------------------------------------
 
-/** PR review task types that require a PR URL */
-const PR_TASK_TYPES = new Set<string>(['review-pr', 'review-pr-security', 'review-pr-tests'])
-
 export const CreateTaskSchema = z
   .object({
     github_issue_url: GitHubIssueUrlSchema.optional(),
