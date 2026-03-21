@@ -37,7 +37,13 @@ export function parseOptions(args: string[]): { taskIds: string[]; options: RunO
     else if (arg === '--verbose') options.verbose = true
     else if (arg === '--dry-run') options.dryRun = true
     else if (arg === '--full') options.full = true
-    else if (arg === '--github-token') options.githubToken = args[++i] ?? null
+    else if (arg === '--github-token') {
+      const next = args[i + 1]
+      if (next && !next.startsWith('--')) {
+        options.githubToken = next
+        i++
+      }
+    }
     else if (!arg.startsWith('--')) taskIds.push(arg)
   }
 
