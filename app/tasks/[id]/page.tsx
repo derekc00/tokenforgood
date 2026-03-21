@@ -4,9 +4,7 @@ import {
   ExternalLink,
   GitPullRequest,
   CheckCircle2,
-  Circle,
   Clock,
-  AlertTriangle,
   Star,
   Terminal,
   Cpu,
@@ -27,6 +25,7 @@ import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { CopyButton } from './copy-button'
 import { HighlightedPrompt } from './highlighted-prompt'
+import { StatusIndicator } from '@/components/status-indicator'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -61,86 +60,6 @@ function modelBadgeColor(model: string): string {
     default:
       return 'bg-muted text-muted-foreground'
   }
-}
-
-// ---------------------------------------------------------------------------
-// Status badge
-// ---------------------------------------------------------------------------
-
-function StatusBadge({ task }: { task: Task }) {
-  const { status, claimed_by, last_heartbeat_at, claimed_at } = task
-
-  if (status === 'open') {
-    return (
-      <span className="flex items-center gap-1.5 text-sm text-emerald-500">
-        <span className="relative flex size-2.5">
-          <span className="absolute inline-flex size-full animate-pulse rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
-        </span>
-        Open
-      </span>
-    )
-  }
-
-  if (status === 'claimed') {
-    return (
-      <span className="flex items-center gap-1.5 text-sm text-amber-500">
-        <span className="relative inline-flex size-2.5 rounded-full bg-amber-400" />
-        {claimed_by ? `Claimed by @${claimed_by}` : 'Claimed'}
-      </span>
-    )
-  }
-
-  if (status === 'in_progress') {
-    const since = last_heartbeat_at ?? claimed_at
-    const ago = since
-      ? formatDistanceToNow(new Date(since), { addSuffix: false })
-      : null
-    return (
-      <span className="flex items-center gap-1.5 text-sm text-blue-500">
-        <span className="relative flex size-2.5">
-          <span className="absolute inline-flex size-full animate-pulse rounded-full bg-blue-400 opacity-75" />
-          <span className="relative inline-flex size-2.5 rounded-full bg-blue-500" />
-        </span>
-        {claimed_by ? `@${claimed_by}` : 'In progress'}
-        {ago ? ` · ${ago} ago` : ''}
-      </span>
-    )
-  }
-
-  if (status === 'completed') {
-    return (
-      <span className="flex items-center gap-1.5 text-sm text-emerald-500">
-        <CheckCircle2 className="size-4" />
-        Completed
-      </span>
-    )
-  }
-
-  if (status === 'stalled') {
-    return (
-      <span className="flex items-center gap-1.5 text-sm text-orange-500">
-        <AlertTriangle className="size-4" />
-        Stalled
-      </span>
-    )
-  }
-
-  if (status === 'failed') {
-    return (
-      <span className="flex items-center gap-1.5 text-sm text-destructive">
-        <Circle className="size-4" />
-        Failed
-      </span>
-    )
-  }
-
-  return (
-    <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-      <Clock className="size-4" />
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
-  )
 }
 
 // ---------------------------------------------------------------------------
@@ -330,7 +249,14 @@ export default async function TaskPage({
             </Badge>
           )}
 
-          <StatusBadge task={task} />
+          <StatusIndicator
+            status={task.status}
+            size="md"
+            claimedBy={task.claimed_by}
+            lastHeartbeatAt={task.last_heartbeat_at}
+            claimedAt={task.claimed_at}
+            prUrl={task.pr_url}
+          />
 
           {task.tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="text-xs">
@@ -674,7 +600,14 @@ export default async function TaskPage({
             </CardHeader>
             <Separator />
             <CardContent className="space-y-2 p-4">
-              <StatusBadge task={task} />
+              <StatusIndicator
+                status={task.status}
+                size="md"
+                claimedBy={task.claimed_by}
+                lastHeartbeatAt={task.last_heartbeat_at}
+                claimedAt={task.claimed_at}
+                prUrl={task.pr_url}
+              />
 
               {(task.status === 'claimed' || task.status === 'in_progress') &&
                 task.claimed_by && (
