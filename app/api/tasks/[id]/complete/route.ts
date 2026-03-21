@@ -29,7 +29,12 @@ export async function POST(
       )
     }
 
-    // TODO: replace with real authenticated user ID from session
+    // TODO: replace with real authenticated user ID from session.
+    // SECURITY TODO: once auth is wired up, verify that the caller's identity
+    // matches the user who claimed this task. Currently any anonymous caller
+    // can complete any claimed task because userId is always 'anonymous'.
+    // Add an ownership check here (e.g. task.claimed_by === userId) and return
+    // 403 Forbidden if the IDs do not match.
     const userId = 'anonymous'
 
     const service = getDataService()
