@@ -8,6 +8,7 @@ import {
   Clock,
   ExternalLink,
 } from "lucide-react"
+import * as React from "react"
 
 import { type Task } from "@/lib/types"
 
@@ -56,6 +57,19 @@ export function StatusIndicator({
 }: StatusIndicatorProps) {
   const cls = sizeClasses(size)
 
+  // SSR-safe relative time: compute only after client mount to avoid hydration
+  // mismatch (Date.now() differs between server render and client hydration).
+  const since = lastHeartbeatAt ?? claimedAt
+  const [relativeTime, setRelativeTime] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (since) {
+      setRelativeTime(
+        formatDistanceToNow(new Date(since), { addSuffix: false })
+      )
+    }
+  }, [since])
+
   if (status === "open") {
     return (
       <span className={`flex items-center gap-1.5 ${cls.text} text-emerald-500`}>
@@ -78,10 +92,13 @@ export function StatusIndicator({
   }
 
   if (status === "in_progress") {
-    const since = lastHeartbeatAt ?? claimedAt
-    const ago = since
-      ? formatDistanceToNow(new Date(since), { addSuffix: false })
-      : null
+    // relativeTime is null on the server; falls back to a static locale date
+    // string on first render, then swaps to relative time after mount.
+    const agoDisplay = relativeTime
+      ? ` · ${relativeTime} ago`
+      : since
+        ? ` · ${new Date(since).toLocaleDateString()}`
+        : ""
 
     return (
       <span className={`flex items-center gap-1.5 ${cls.text} text-blue-500`}>
@@ -90,7 +107,7 @@ export function StatusIndicator({
           <span className={`relative inline-flex ${cls.dot} rounded-full bg-blue-500`} />
         </span>
         {claimedBy ? `@${claimedBy}` : "In progress"}
-        {ago ? ` · ${ago} ago` : ""}
+        {agoDisplay}
       </span>
     )
   }
