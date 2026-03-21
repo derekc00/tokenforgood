@@ -29,13 +29,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Request body must be valid JSON' }, { status: 400 })
     }
 
-    console.log('[webhook/github]', {
-      event: eventType,
-      delivery: deliveryId,
-      hasSignature: Boolean(signature),
-      payload,
-    })
-
     // TODO: handle pull_request "closed" + merged=true events
     // if (eventType === 'pull_request') { ... }
 

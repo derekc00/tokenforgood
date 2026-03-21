@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
   }
 
   // TODO: exchange code → access token → fetch GitHub user → upsert Profile → set session
-  console.log('[auth/callback] received code (stub — not exchanging yet)')
 
   return NextResponse.redirect(new URL('/', request.nextUrl.origin))
 }

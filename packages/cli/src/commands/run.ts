@@ -5,6 +5,8 @@ import {
   type TaskResponse,
 } from '../services/api.js'
 
+const APP_URL = (process.env.TOKENFORGOOD_APP_URL ?? 'https://tokenforgood.dev').replace(/\/$/, '')
+
 export interface RunOptions {
   noContainer: boolean
   verbose: boolean
@@ -19,7 +21,7 @@ interface SandboxHandle {
   mode: 'safe' | 'full'
 }
 
-function parseOptions(args: string[]): { taskIds: string[]; options: RunOptions } {
+export function parseOptions(args: string[]): { taskIds: string[]; options: RunOptions } {
   const taskIds: string[] = []
   const options: RunOptions = {
     noContainer: false,
@@ -101,7 +103,7 @@ async function runSingleTask(taskId: string, options: RunOptions): Promise<void>
     const prUrl = await openDraftPR(task, sandbox)
 
     console.log(`[tokenforgood] Done! Draft PR: ${prUrl}`)
-    console.log(`[tokenforgood] Mark this task complete at: https://tokenforgood.dev/tasks/${taskId}`)
+    console.log(`[tokenforgood] Mark this task complete at: ${APP_URL}/tasks/${taskId}`)
   } finally {
     clearInterval(heartbeatInterval)
     console.log('[tokenforgood] Heartbeat stopped')
