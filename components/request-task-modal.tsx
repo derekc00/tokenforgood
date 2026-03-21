@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { GitHubIssueUrlSchema } from "@/lib/schemas"
-import { parseGitHubIssueUrl } from "@/lib/github/repo-profile"
+import { parseGitHubIssueUrl } from "@/lib/github/url"
 import type { Template, TemplateCategory } from "@/lib/types"
 
 // ---------------------------------------------------------------------------

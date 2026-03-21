@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseGitHubIssueUrl } from '@/lib/github/repo-profile'
+import { parseGitHubIssueUrl } from '@/lib/github/url'
 
 // ---------------------------------------------------------------------------
 // parseGitHubIssueUrl — valid URLs

@@ -18,7 +18,7 @@ import {
   TaskTypeSchema,
   TaskStatusSchema,
 } from '@/lib/schemas'
-import { parseGitHubIssueUrl } from '@/lib/github/repo-profile'
+import { parseGitHubIssueUrl } from '@/lib/github/url'
 import type {
   DataService,
   PaginatedResult,
