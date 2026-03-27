@@ -107,13 +107,13 @@ describe('generateFilterRules — wildcard / subdomain domains', () => {
     expect(rules).toContain('\\.fastly\\.net$')
   })
 
-  it('does NOT add a ^ prefix anchor to leading-dot domains', () => {
+  it('adds a ^.* prefix anchor to leading-dot domains to prevent prefix spoofing', () => {
     const rules = generateFilterRules()
-    // A leading-dot entry must NOT start with ^ (it's a suffix match)
     const lines = rules.split('\n')
     const fastlyLine = lines.find((l) => l.includes('fastly'))
     expect(fastlyLine).toBeDefined()
-    expect(fastlyLine!.startsWith('^')).toBe(false)
+    // Must start with ^.* to prevent "evilnotfastly.net" from matching
+    expect(fastlyLine!.startsWith('^.*')).toBe(true)
   })
 
   it('produced wildcard pattern matches subdomains when used as a regex', () => {
@@ -124,6 +124,18 @@ describe('generateFilterRules — wildcard / subdomain domains', () => {
 
     expect(regex.test('npm.fastly.net')).toBe(true)
     expect(regex.test('cdn.fastly.net')).toBe(true)
+  })
+
+  it('wildcard pattern rejects spoofed domain names', () => {
+    const rules = generateFilterRules()
+    const lines = rules.split('\n').filter((l) => l.length > 0)
+    const fastlyPattern = lines.find((l) => l.includes('fastly'))!
+    const regex = new RegExp(fastlyPattern)
+
+    // These must NOT match — they are not subdomains of fastly.net
+    expect(regex.test('evilnotfastly.net')).toBe(false)
+    expect(regex.test('xfastly.net')).toBe(false)
+    expect(regex.test('notfastly.net')).toBe(false)
   })
 
   it('exact-domain pattern does NOT match subdomains', () => {

@@ -45,15 +45,17 @@ export async function POST(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     }
 
-    // Guard: verify the caller still owns this task (sleep/reconnect race condition).
-    // The Authorization header carries the claim token from when the task was claimed.
+    // Guard: verify the caller holds the claim token for this task.
+    // Prevents unauthenticated completion and sleep/reconnect race conditions.
     const authHeader = request.headers.get('Authorization')
     const claimToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
-    if (claimToken && task.claimed_by && task.claimed_by !== claimToken) {
-      return NextResponse.json(
-        { error: 'Task has been re-claimed by another donor' },
-        { status: 409 },
-      )
+    if (task.claimed_by) {
+      if (!claimToken || !(await service.validateClaimToken(id, claimToken))) {
+        return NextResponse.json(
+          { error: 'Unauthorized: invalid or missing claim token' },
+          { status: 401 },
+        )
+      }
     }
 
     const result = await service.completeTask(id, userId, parsed.data)

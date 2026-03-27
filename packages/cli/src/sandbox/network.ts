@@ -167,8 +167,8 @@ export function generateFilterRules(): string {
     const escaped = domain.replace(/\./g, '\\.')
 
     if (domain.startsWith('.')) {
-      // e.g. ".fastly.net" → any subdomain of fastly.net
-      return `${escaped}$`
+      // e.g. ".fastly.net" → any subdomain of fastly.net (but not evilnotfastly.net)
+      return `^.*${escaped}$`
     }
 
     // Exact domain match.

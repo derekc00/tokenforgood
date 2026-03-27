@@ -68,6 +68,7 @@ export interface DataService {
     taskId: string,
     claimToken: string,
   ): Promise<{ success: boolean; error?: string }>
+  validateClaimToken(taskId: string, claimToken: string): Promise<boolean>
 
   // Templates
   getTemplates(): Promise<Template[]>

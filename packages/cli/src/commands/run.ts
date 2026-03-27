@@ -34,6 +34,20 @@ const APP_URL = (process.env.TOKENFORGOOD_APP_URL ?? 'https://tokenforgood.dev')
 const SANDBOX_IMAGE = process.env.TOKENFORGOOD_SANDBOX_IMAGE ?? 'ghcr.io/tokenforgood/sandbox:latest'
 const TIMEOUT_MS = 90 * 60 * 1000 // 90 minutes
 
+// Packages that legitimately need postinstall (native addons).
+// Only these may be passed to `npm rebuild` inside the sandbox.
+// The manifest's postinstall_allowlist is intersected with this set.
+const SAFE_REBUILD_PACKAGES = new Set([
+  'esbuild',
+  'sharp',
+  'better-sqlite3',
+  'bcrypt',
+  'argon2',
+  'canvas',
+  'sqlite3',
+  'playwright',
+])
+
 const execFileAsync = promisify(execFile)
 
 export interface RunOptions {
@@ -277,8 +291,8 @@ async function runSandboxed(taskId: string, options: RunOptions): Promise<void> 
       settingsJson,
       proxyContainerName: proxy.containerName,
       brokerPort: broker.port,
+      brokerNonce: broker.nonce,
       envVars: {
-        BROKER_NONCE: broker.nonce,
         TFG_TASK_ID: taskId,
         TFG_REPO: task.repo_full_name,
       },
@@ -291,12 +305,22 @@ async function runSandboxed(taskId: string, options: RunOptions): Promise<void> 
       console.log(`[tokenforgood]   Container: ${containerId.slice(0, 12)}`)
     }
 
-    // Step 13: Run postinstall for allowlisted packages
+    // Step 13: Run postinstall for allowlisted packages.
+    // Only packages in the hardcoded SAFE_REBUILD_PACKAGES set are permitted,
+    // regardless of what the manifest claims. This prevents a compromised manifest
+    // server from triggering arbitrary postinstall scripts.
     if (manifest?.manifest.postinstall_allowlist?.length) {
-      const allowlist = manifest.manifest.postinstall_allowlist
-      console.log(`[tokenforgood] Rebuilding allowlisted packages: ${allowlist.join(', ')}`)
-      for (const pkg of allowlist) {
-        await execDockerExec(containerId, ['npm', 'rebuild', pkg])
+      const requested = manifest.manifest.postinstall_allowlist
+      const approved = requested.filter(pkg => SAFE_REBUILD_PACKAGES.has(pkg))
+      const rejected = requested.filter(pkg => !SAFE_REBUILD_PACKAGES.has(pkg))
+      if (rejected.length > 0) {
+        console.warn(`[tokenforgood] Ignoring unknown postinstall packages: ${rejected.join(', ')}`)
+      }
+      if (approved.length > 0) {
+        console.log(`[tokenforgood] Rebuilding allowlisted packages: ${approved.join(', ')}`)
+        for (const pkg of approved) {
+          await execDockerExec(containerId, ['npm', 'rebuild', pkg])
+        }
       }
     }
 

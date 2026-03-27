@@ -883,6 +883,11 @@ export class MockDataService implements DataService {
     return { success: true }
   }
 
+  async validateClaimToken(taskId: string, claimToken: string): Promise<boolean> {
+    const claim = this.store.claims.get(taskId)
+    return claim !== undefined && claim.token === claimToken
+  }
+
   // ---------- Templates ----------
 
   async getTemplates(): Promise<Template[]> {

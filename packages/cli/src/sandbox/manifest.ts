@@ -1,7 +1,9 @@
 import { createHash, verify } from 'node:crypto'
 
-// Placeholder root public key — replace with real key before release
+// Placeholder root public key — MUST be replaced with real key before release.
+// verifyManifest() rejects all manifests while this is zeroed out.
 const ROOT_PUBLIC_KEY_HEX = '0'.repeat(64) // 32 bytes = 64 hex chars
+const IS_PLACEHOLDER_KEY = ROOT_PUBLIC_KEY_HEX === '0'.repeat(64)
 const KEY_FETCH_URL = 'https://tokenforgood.dev/api/signing-key'
 
 /** Describes a task that the CLI will run in a sandboxed environment. */
@@ -42,6 +44,10 @@ export interface SignedManifest {
  * @returns `true` if both signatures are valid; `false` on any failure.
  */
 export function verifyManifest(signed: SignedManifest): boolean {
+  // Reject all manifests while the root key is the placeholder.
+  // This prevents a false sense of security during development.
+  if (IS_PLACEHOLDER_KEY) return false
+
   try {
     const rootKeyBuf = Buffer.from(ROOT_PUBLIC_KEY_HEX, 'hex')
     const signingKeyBuf = Buffer.from(signed.signing_key, 'hex')

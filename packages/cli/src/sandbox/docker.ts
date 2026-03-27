@@ -25,6 +25,8 @@ export interface SpawnConfig {
   proxyContainerName: string
   /** Port the credential broker is listening on (host-side, reached via host.docker.internal). */
   brokerPort: number
+  /** Broker nonce — written to a file inside the container, NOT passed as an env var. */
+  brokerNonce: string
   envVars: Record<string, string>
   /** Container memory limit in MiB. Defaults to 4096. */
   memoryLimitMb: number
@@ -135,6 +137,7 @@ export async function spawnContainer(config: SpawnConfig): Promise<string> {
     settingsJson,
     proxyContainerName,
     brokerPort,
+    brokerNonce,
     envVars,
     memoryLimitMb = 4096,
   } = config
@@ -188,10 +191,12 @@ export async function spawnContainer(config: SpawnConfig): Promise<string> {
     throw new Error(`Failed to copy auth file into container: ${authCpResult.stderr}`)
   }
 
-  // Write settingsJson to a host temp file, then copy into the container
+  // Write settingsJson and broker nonce to host temp files, then copy into container.
+  // The nonce is written to a file (not an env var) so malicious dependencies
+  // cannot read it from /proc/1/environ.
   const tmpDir = await mkdtemp(join(tmpdir(), 'tfg-settings-'))
-  const settingsTmpPath = join(tmpDir, 'settings.json')
   try {
+    const settingsTmpPath = join(tmpDir, 'settings.json')
     await writeFile(settingsTmpPath, settingsJson, 'utf8')
     const settingsCpResult = await execDocker(
       'cp',
@@ -201,6 +206,19 @@ export async function spawnContainer(config: SpawnConfig): Promise<string> {
     if (settingsCpResult.exitCode !== 0) {
       await execDocker('rm', '-f', containerId)
       throw new Error(`Failed to copy settings into container: ${settingsCpResult.stderr}`)
+    }
+
+    // Write broker nonce to a file readable only by the sandbox user
+    const nonceTmpPath = join(tmpDir, 'broker-nonce')
+    await writeFile(nonceTmpPath, brokerNonce, { encoding: 'utf8', mode: 0o400 })
+    const nonceCpResult = await execDocker(
+      'cp',
+      nonceTmpPath,
+      `${containerId}:/tmp/claude-auth/broker-nonce`,
+    )
+    if (nonceCpResult.exitCode !== 0) {
+      await execDocker('rm', '-f', containerId)
+      throw new Error(`Failed to copy broker nonce into container: ${nonceCpResult.stderr}`)
     }
   } finally {
     await rm(tmpDir, { recursive: true, force: true })
