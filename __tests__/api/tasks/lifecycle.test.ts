@@ -361,12 +361,24 @@ describe('POST /api/tasks/:id/complete', () => {
     return { id, claim_token }
   }
 
-  // NOTE: this test reflects CURRENT stubbed behavior — the route accepts any
-  // caller without verifying identity because userId is hard-coded to
-  // 'anonymous'.  The claim_token is not checked on this endpoint.
-  // TODO (auth): once ownership enforcement is added this test should supply a
-  // valid session credential and the bare-anonymous variant should return 401.
-  it('completes a claimed task with pr_url and returns 200', async () => {
+  it('completes a claimed task with pr_url and valid claim token', async () => {
+    const { id, claim_token } = await createClaimedTask()
+
+    const res = await completeTask(
+      makeRequest(`http://localhost/api/tasks/${id}/complete`, {
+        method: 'POST',
+        body: { pr_url: VALID_PR_URL },
+        headers: { Authorization: `Bearer ${claim_token}` },
+      }),
+      routeParams(id),
+    )
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.success).toBe(true)
+  })
+
+  it('returns 401 when completing a claimed task without a claim token', async () => {
     const { id } = await createClaimedTask()
 
     const res = await completeTask(
@@ -376,10 +388,8 @@ describe('POST /api/tasks/:id/complete', () => {
       }),
       routeParams(id),
     )
-    const body = await res.json()
 
-    expect(res.status).toBe(200)
-    expect(body.success).toBe(true)
+    expect(res.status).toBe(401)
   })
 
   it('returns 400 when neither pr_url nor issue_comment_url is provided', async () => {

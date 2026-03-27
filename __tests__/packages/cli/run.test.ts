@@ -193,13 +193,34 @@ describe('parseOptions — flag combinations', () => {
 })
 
 // ---------------------------------------------------------------------------
-// runCommand — dry-run path (no network calls)
+// runCommand — dry-run path (fetches task + prompt, does not claim)
 // ---------------------------------------------------------------------------
 
 describe('runCommand — dry-run path', () => {
   beforeEach(() => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
     vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    // Mock fetch for dry-run (fetchTask, fetchTaskPrompt, fetchManifest)
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      if (url.includes('/prompt')) {
+        return new Response(JSON.stringify({ full_prompt: 'Test prompt content' }), { status: 200 })
+      }
+      if (url.includes('/manifest')) {
+        return new Response('', { status: 404 })
+      }
+      // Default: task fetch
+      return new Response(JSON.stringify({
+        id: 'task-1',
+        github_issue_url: 'https://github.com/owner/repo/issues/1',
+        github_issue_title: 'Test issue',
+        repo_full_name: 'owner/repo',
+        task_type: 'write-tests',
+        template: null,
+      }), { status: 200 })
+    })
   })
 
   afterEach(() => {
@@ -212,27 +233,24 @@ describe('runCommand — dry-run path', () => {
     ).resolves.toBeUndefined()
   })
 
-  it('logs each task ID during dry-run', async () => {
-    await runCommand(['task-abc', 'task-def', '--dry-run'])
+  it('logs the rendered prompt during dry-run', async () => {
+    await runCommand(['task-1', '--dry-run'])
     const logCalls = (console.log as ReturnType<typeof vi.spyOn>).mock.calls
       .map((args) => args.join(' '))
-    expect(logCalls.some((line) => line.includes('task-abc'))).toBe(true)
-    expect(logCalls.some((line) => line.includes('task-def'))).toBe(true)
+    expect(logCalls.some((line) => line.includes('Test prompt content'))).toBe(true)
   })
 
   it('logs a dry-run indicator message', async () => {
     await runCommand(['task-1', '--dry-run'])
     const logCalls = (console.log as ReturnType<typeof vi.spyOn>).mock.calls
       .map((args) => args.join(' '))
-    expect(logCalls.some((line) => line.includes('dry-run'))).toBe(true)
+    expect(logCalls.some((line) => line.toLowerCase().includes('dry-run'))).toBe(true)
   })
 
-  it('does not make network calls during dry-run', async () => {
-    // If network calls were made, global fetch would be invoked.
-    // We spy on global fetch to confirm it is never called.
-    const fetchSpy = vi.spyOn(globalThis, 'fetch')
-    await runCommand(['task-xyz', '--dry-run'])
-    expect(fetchSpy).not.toHaveBeenCalled()
-    fetchSpy.mockRestore()
+  it('does not call the claim endpoint during dry-run', async () => {
+    await runCommand(['task-1', '--dry-run'])
+    const fetchCalls = (globalThis.fetch as ReturnType<typeof vi.spyOn>).mock.calls
+      .map((args) => (typeof args[0] === 'string' ? args[0] : args[0].toString()))
+    expect(fetchCalls.every((url) => !url.includes('/claim'))).toBe(true)
   })
 })
