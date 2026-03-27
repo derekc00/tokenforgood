@@ -21,6 +21,9 @@ export interface SpawnConfig {
   claudeBinaryPath: string
   authFilePath: string
   settingsJson: string
+  /** Name of the proxy sidecar container on the Docker network. */
+  proxyContainerName: string
+  /** Port the credential broker is listening on (host-side, reached via host.docker.internal). */
   brokerPort: number
   envVars: Record<string, string>
   /** Container memory limit in MiB. Defaults to 4096. */
@@ -130,17 +133,22 @@ export async function spawnContainer(config: SpawnConfig): Promise<string> {
     claudeBinaryPath,
     authFilePath,
     settingsJson,
+    proxyContainerName,
     brokerPort,
     envVars,
     memoryLimitMb = 4096,
   } = config
 
   // Build env flag pairs
+  // HTTP(S)_PROXY points to the tinyproxy sidecar on the Docker network (port 8888).
+  // BROKER_URL tells the agent how to reach the credential broker on the host.
   const envFlags: string[] = [
     '-e',
-    `HTTP_PROXY=http://proxy:${brokerPort}`,
+    `HTTP_PROXY=http://${proxyContainerName}:8888`,
     '-e',
-    `HTTPS_PROXY=http://proxy:${brokerPort}`,
+    `HTTPS_PROXY=http://${proxyContainerName}:8888`,
+    '-e',
+    `BROKER_URL=http://host.docker.internal:${brokerPort}`,
     '-e',
     'npm_config_ignore_scripts=true',
     ...Object.entries(envVars).flatMap(([k, v]) => ['-e', `${k}=${v}`]),

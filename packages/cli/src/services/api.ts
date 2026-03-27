@@ -67,3 +67,58 @@ export function startHeartbeat(taskId: string, claimToken: string): NodeJS.Timeo
     void sendHeartbeat(taskId, claimToken)
   }, 60_000) // every 60 seconds
 }
+
+// ---------------------------------------------------------------------------
+// Manifest / prompt / status / unclaim
+// ---------------------------------------------------------------------------
+
+const SignedManifestSchema = z.object({
+  manifest: z.object({
+    task_id: z.string(),
+    repo_url: z.string(),
+    issue_url: z.string(),
+    template_name: z.string(),
+    system_prompt_sha256: z.string(),
+    allowed_tools: z.array(z.string()),
+    network_policy: z.array(z.string()),
+    image_digest: z.string(),
+    postinstall_allowlist: z.array(z.string()),
+    created_at: z.string(),
+  }),
+  signature: z.string(),
+  signing_key: z.string(),
+  signing_key_signature: z.string(),
+})
+
+export type SignedManifestResponse = z.infer<typeof SignedManifestSchema>
+
+export async function fetchManifest(taskId: string): Promise<SignedManifestResponse> {
+  const response = await fetch(`${API_BASE}/api/tasks/${taskId}/manifest`)
+  if (!response.ok) throw new Error(`Failed to fetch manifest for task: ${taskId}`)
+  return SignedManifestSchema.parse(await response.json())
+}
+
+export async function fetchTaskPrompt(taskId: string): Promise<string> {
+  const response = await fetch(`${API_BASE}/api/tasks/${taskId}/prompt`)
+  if (!response.ok) throw new Error(`Failed to fetch prompt for task: ${taskId}`)
+  const data = await response.json() as { full_prompt: string }
+  return data.full_prompt
+}
+
+export async function fetchTaskStatus(taskId: string): Promise<{ claimed_by: string | null; status: string }> {
+  const response = await fetch(`${API_BASE}/api/tasks/${taskId}`)
+  if (!response.ok) throw new Error(`Failed to fetch task status: ${taskId}`)
+  const data = TaskResponseSchema.parse(await response.json())
+  return { claimed_by: (data as any).claimed_by ?? null, status: (data as any).status ?? 'unknown' }
+}
+
+export async function unclaimTask(taskId: string, claimToken: string, reason: string): Promise<void> {
+  await fetch(`${API_BASE}/api/tasks/${taskId}/unclaim`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${claimToken}`,
+    },
+    body: JSON.stringify({ reason }),
+  }).catch(() => { /* unclaim failures are non-fatal */ })
+}

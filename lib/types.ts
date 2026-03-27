@@ -30,6 +30,8 @@ export type TemplateCategory = 'code-generation' | 'review-analysis'
 
 export type ExecutionMode = 'safe' | 'full'
 
+export type SandboxMode = 'copy-paste' | 'sandboxed'
+
 export type OutputType = 'draft-pr' | 'issue-comment'
 
 export type AIProvider =

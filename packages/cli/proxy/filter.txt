@@ -1,0 +1,18 @@
+# Allowed domains for sandbox egress
+# Format: extended regex patterns matched against the URL
+# NO github.com — GitHub access only through credential broker
+
+# npm registry + CDN
+^registry\.npmjs\.org
+\.fastly\.net
+
+# PyPI
+^pypi\.org
+^files\.pythonhosted\.org
+
+# AI provider APIs (agent auth)
+^api\.anthropic\.com
+^api\.openai\.com
+
+# TokenForGood API
+^tokenforgood\.dev
